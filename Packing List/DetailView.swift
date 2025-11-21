@@ -32,7 +32,6 @@ struct DetailView: View {
                 ForEach(flatItems) { flat in
                     ChecklistRowView(item: flat.item, depth: flat.depth)
                 }
-                .onDelete(perform: deleteItems)
                 .onMove(perform: moveItems)
                 
                 Button(action: addItem) {
@@ -58,15 +57,6 @@ struct DetailView: View {
         
         // Force save to update the relationship and trigger UI refresh
         try? modelContext.save()
-    }
-    
-    private func deleteItems(offsets: IndexSet) {
-        let flat = flatItems
-        for index in offsets {
-            guard index < flat.count else { continue }
-            modelContext.delete(flat[index].item)
-        }
-        apply(flatOrder: flatItems)
     }
     
     private func moveItems(from source: IndexSet, to destination: Int) {

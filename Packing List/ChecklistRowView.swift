@@ -6,10 +6,18 @@ struct ChecklistRowView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var isExpanded: Bool = true
     
+    // Query children dynamically to ensure UI updates when parent changes
+    @Query private var allItems: [ChecklistItem]
+    
+    private var children: [ChecklistItem] {
+        allItems.filter { $0.parent?.id == item.id }
+            .sorted(by: { $0.sortOrder < $1.sortOrder })
+    }
+    
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
-            if let children = item.children, !children.isEmpty {
-                ForEach(children.sorted(by: { $0.sortOrder < $1.sortOrder })) { child in
+            if !children.isEmpty {
+                ForEach(children) { child in
                     ChecklistRowView(item: child)
                 }
                 .onDelete(perform: deleteChild)
@@ -156,25 +164,23 @@ struct ChecklistRowView: View {
         guard let parent = item.parent,
               let siblings = parent.children else { return }
         
-        withAnimation {
-            let sortedSiblings = siblings.sorted(by: { $0.sortOrder < $1.sortOrder })
-            guard let currentIndex = sortedSiblings.firstIndex(where: { $0.id == item.id }),
-                  currentIndex > 0 else { return }
-            
-            let previousSibling = sortedSiblings[currentIndex - 1]
-            
-            print("🟢 Indenting \(item.title) under \(previousSibling.title)")
-            
-            // Change parent to previous sibling
-            item.parent = previousSibling
-            let maxOrder = previousSibling.children?.map { $0.sortOrder }.max() ?? -1
-            item.sortOrder = maxOrder + 1
-            
-            // Force a save to trigger SwiftData updates
-            try? modelContext.save()
-            
-            print("✅ Indent complete")
-        }
+        let sortedSiblings = siblings.sorted(by: { $0.sortOrder < $1.sortOrder })
+        guard let currentIndex = sortedSiblings.firstIndex(where: { $0.id == item.id }),
+              currentIndex > 0 else { return }
+        
+        let previousSibling = sortedSiblings[currentIndex - 1]
+        
+        print("🟢 Indenting \(item.title) under \(previousSibling.title)")
+        
+        // Change parent to previous sibling
+        item.parent = previousSibling
+        let maxOrder = previousSibling.children?.map { $0.sortOrder }.max() ?? -1
+        item.sortOrder = maxOrder + 1
+        
+        // Force a save to trigger SwiftData updates BEFORE animation
+        try? modelContext.save()
+        
+        print("✅ Indent complete")
     }
     
     private func outdentItem() {
@@ -183,24 +189,23 @@ struct ChecklistRowView: View {
             return
         }
         
-        print("🟢 Outdenting \(item.title)")
+        print("🟢 Outdenting \(item.title) from \(currentParent.title)")
         
-        withAnimation {
-            // Move to grandparent's children (or root if grandparent is the invisible root)
-            item.parent = currentParent.parent
-            
-            if let grandparent = currentParent.parent {
-                let maxOrder = grandparent.children?.map { $0.sortOrder }.max() ?? -1
-                item.sortOrder = maxOrder + 1
-            } else {
-                // Moving to root level (parent is the invisible root)
-                let maxOrder = currentParent.parent?.children?.map { $0.sortOrder }.max() ?? -1
-                item.sortOrder = maxOrder + 1
-            }
-            
-            // Force a save to trigger SwiftData updates
-            try? modelContext.save()
+        // Move to grandparent's children (or root if grandparent is the invisible root)
+        let newParent = currentParent.parent
+        item.parent = newParent
+        
+        if let grandparent = newParent {
+            let maxOrder = grandparent.children?.map { $0.sortOrder }.max() ?? -1
+            item.sortOrder = maxOrder + 1
+        } else {
+            // Moving to root level (parent is the invisible root)
+            let maxOrder = newParent?.children?.map { $0.sortOrder }.max() ?? -1
+            item.sortOrder = maxOrder + 1
         }
+        
+        // Force save immediately
+        try? modelContext.save()
         
         print("✅ Outdent complete")
     }

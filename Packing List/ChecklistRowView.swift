@@ -146,13 +146,10 @@ struct ChecklistRowView: View {
         guard let currentParent = item.parent else { return }
         
         let newParent = currentParent.parent
-        let oldParent = item.parent
         item.parent = newParent
         
-        let nextOrder = (newParent?.children.map { $0.sortOrder }.max() ?? -1) + 1
-        item.sortOrder = nextOrder
-        
-        rebalanceSortOrders(for: oldParent)
+        rebalanceAfterOutdent(newParent: newParent, after: currentParent)
+        rebalanceSortOrders(for: currentParent)
         rebalanceSortOrders(for: newParent)
         try? modelContext.save()
     }
@@ -195,6 +192,24 @@ struct ChecklistRowView: View {
         let sortedChildren = parent.children.sorted(by: { $0.sortOrder < $1.sortOrder })
         for (index, child) in sortedChildren.enumerated() {
             child.sortOrder = index
+        }
+    }
+    
+    private func rebalanceAfterOutdent(newParent: ChecklistItem?, after parent: ChecklistItem) {
+        guard let newParent = newParent else { return }
+        
+        var reordered = newParent.children
+            .filter { $0.id != item.id }
+            .sorted(by: { $0.sortOrder < $1.sortOrder })
+        
+        if let parentIndex = reordered.firstIndex(where: { $0.id == parent.id }) {
+            reordered.insert(item, at: parentIndex + 1)
+        } else {
+            reordered.append(item)
+        }
+        
+        for (idx, child) in reordered.enumerated() {
+            child.sortOrder = idx
         }
     }
 }

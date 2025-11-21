@@ -13,6 +13,12 @@ struct ChecklistRowView: View {
                 .foregroundColor(.secondary)
                 .font(.system(size: 14))
                 .frame(width: 20)
+                .highPriorityGesture(
+                    DragGesture(minimumDistance: 20)
+                        .onEnded { value in
+                            handleHorizontalDrag(translation: value.translation)
+                        }
+                )
             
             // Main content area
             HStack(spacing: 8) {
@@ -109,6 +115,22 @@ struct ChecklistRowView: View {
         rebalanceSortOrders(for: oldParent)
         rebalanceSortOrders(for: newParent)
         try? modelContext.save()
+    }
+    
+    private func handleHorizontalDrag(translation: CGSize) {
+        let horizontal = translation.width
+        let vertical = abs(translation.height)
+        guard abs(horizontal) > vertical else { return }
+        
+        if horizontal > 40 {
+            indentItem()
+        } else if horizontal < -40, canOutdent() {
+            outdentItem()
+        }
+    }
+    
+    private func canOutdent() -> Bool {
+        return item.parent != nil
     }
     
     private func rebalanceSortOrders(for parent: ChecklistItem?) {

@@ -5,6 +5,11 @@ struct ChecklistRowView: View {
     @Bindable var item: ChecklistItem
     let depth: Int
     @Environment(\.modelContext) private var modelContext
+    @State private var dragOffset: CGFloat = 0
+    
+    private var baseIndent: CGFloat {
+        CGFloat(max(depth - 1, 0)) * 20
+    }
     
     var body: some View {
         HStack(spacing: 12) {
@@ -15,8 +20,12 @@ struct ChecklistRowView: View {
                 .frame(width: 20)
                 .highPriorityGesture(
                     DragGesture(minimumDistance: 20)
+                        .onChanged { value in
+                            handleHorizontalDragChanged(translation: value.translation)
+                        }
                         .onEnded { value in
                             handleHorizontalDrag(translation: value.translation)
+                            dragOffset = 0
                         }
                 )
             
@@ -34,7 +43,9 @@ struct ChecklistRowView: View {
                 }
             }
         }
-        .padding(.leading, CGFloat(max(depth - 1, 0)) * 20)
+        .padding(.leading, baseIndent)
+        .offset(x: dragOffset)
+        .animation(.interactiveSpring(response: 0.2, dampingFraction: 0.85), value: dragOffset)
         .contentShape(Rectangle())
         .contextMenu {
             Button(role: .destructive) {
@@ -117,6 +128,21 @@ struct ChecklistRowView: View {
         try? modelContext.save()
     }
     
+    private func handleHorizontalDragChanged(translation: CGSize) {
+        let horizontal = translation.width
+        let vertical = abs(translation.height)
+        guard abs(horizontal) > vertical + 4 else { dragOffset = 0; return }
+        
+        let limited = max(min(horizontal, 24), -24)
+        if limited > 0, canIndent() {
+            dragOffset = limited
+        } else if limited < 0, canOutdent() {
+            dragOffset = limited
+        } else {
+            dragOffset = 0
+        }
+    }
+    
     private func handleHorizontalDrag(translation: CGSize) {
         let horizontal = translation.width
         let vertical = abs(translation.height)
@@ -127,6 +153,7 @@ struct ChecklistRowView: View {
         } else if horizontal < -40, canOutdent() {
             outdentItem()
         }
+        dragOffset = 0
     }
     
     private func canOutdent() -> Bool {

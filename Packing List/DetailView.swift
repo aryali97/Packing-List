@@ -4,15 +4,22 @@ import SwiftData
 struct DetailView: View {
     @Bindable var packingList: PackingList
     @Environment(\.modelContext) private var modelContext
+    @State private var draggingItemID: UUID?
     
     private struct FlatItem: Identifiable {
         let id: UUID
         let item: ChecklistItem
         let depth: Int
+        let parentID: UUID?
     }
     
     private var flatItems: [FlatItem] {
-        flatten(parent: packingList.rootItem, depth: 1)
+        flatten(parent: packingList.rootItem, depth: 1, parentID: packingList.rootItem.id)
+    }
+    
+    private var visibleItems: [FlatItem] {
+        let flat = flatItems
+        return visibleList(from: flat, collapsingID: draggingItemID).map { flat[$0] }
     }
     
     var body: some View {
@@ -29,8 +36,13 @@ struct DetailView: View {
             }
             
             Section("Items") {
-                ForEach(flatItems) { flat in
-                    ChecklistRowView(item: flat.item, depth: flat.depth)
+                ForEach(visibleItems) { flat in
+                    ChecklistRowView(
+                        item: flat.item,
+                        depth: flat.depth,
+                        onDragStart: { draggingItemID = flat.item.id },
+                        onDragEnd: { draggingItemID = nil }
+                    )
                 }
                 .onMove(perform: moveItems)
                 
@@ -60,38 +72,57 @@ struct DetailView: View {
     }
     
     private func moveItems(from source: IndexSet, to destination: Int) {
-        guard let start = source.first else { return }
+        guard let sourceVisibleIndex = source.first else { return }
         
-        var flat = flatItems
-        guard start < flat.count else { return }
+        let flat = flatItems
+        let visibleBefore = visibleList(from: flat, collapsingID: draggingItemID)
+        guard sourceVisibleIndex < visibleBefore.count else { return }
         
-        let moveRange = subtreeRange(in: flat, at: start)
+        let sourceFlatIndex = visibleBefore[sourceVisibleIndex]
+        let moveRange = subtreeRange(in: flat, at: sourceFlatIndex)
         let block = Array(flat[moveRange])
-        flat.removeSubrange(moveRange)
         
-        var adjustedDestination = destination
-        if destination > moveRange.lowerBound {
-            adjustedDestination -= moveRange.count
+        var flatWithoutBlock = flat
+        flatWithoutBlock.removeSubrange(moveRange)
+        
+        let visibleAfter = visibleList(from: flatWithoutBlock, collapsingID: nil)
+        
+        // Adjust destination to account for hidden children that were removed but not represented in the visible list move.
+        let adjustedDestinationVisible: Int
+        if block.count > 1 && destination > sourceVisibleIndex {
+            adjustedDestinationVisible = max(sourceVisibleIndex + 1, destination - (block.count - 1))
+        } else {
+            adjustedDestinationVisible = destination
         }
-        adjustedDestination = max(0, min(adjustedDestination, flat.count))
         
-        let previousDepth = adjustedDestination > 0 ? flat[adjustedDestination - 1].depth : 0
+        let clampedDestination = min(adjustedDestinationVisible, visibleAfter.count)
+        let destinationFlatIndex = clampedDestination < visibleAfter.count
+            ? visibleAfter[clampedDestination]
+            : flatWithoutBlock.count
+        
+        let previousDepth = destinationFlatIndex > 0 ? flatWithoutBlock[destinationFlatIndex - 1].depth : 0
         let originalBaseDepth = block.first?.depth ?? 1
         let newBaseDepth = max(1, min(originalBaseDepth, previousDepth + 1))
         let depthDelta = newBaseDepth - originalBaseDepth
         
         let adjustedBlock = block.map { flatItem in
-            FlatItem(id: flatItem.id, item: flatItem.item, depth: max(1, flatItem.depth + depthDelta))
+            FlatItem(
+                id: flatItem.id,
+                item: flatItem.item,
+                depth: max(1, flatItem.depth + depthDelta),
+                parentID: flatItem.parentID
+            )
         }
         
-        flat.insert(contentsOf: adjustedBlock, at: adjustedDestination)
-        apply(flatOrder: flat)
+        flatWithoutBlock.insert(contentsOf: adjustedBlock, at: destinationFlatIndex)
+        apply(flatOrder: flatWithoutBlock)
+        draggingItemID = nil
     }
     
-    private func flatten(parent: ChecklistItem, depth: Int) -> [FlatItem] {
+    private func flatten(parent: ChecklistItem, depth: Int, parentID: UUID?) -> [FlatItem] {
         let sortedChildren = parent.children.sorted(by: { $0.sortOrder < $1.sortOrder })
         return sortedChildren.flatMap { child in
-            [FlatItem(id: child.id, item: child, depth: depth)] + flatten(parent: child, depth: depth + 1)
+            [FlatItem(id: child.id, item: child, depth: depth, parentID: parentID)] + flatten(parent: child, depth: depth + 1, parentID: child.id)
         }
     }
     
@@ -131,5 +162,25 @@ struct DetailView: View {
         }
         
         try? modelContext.save()
+    }
+    
+    private func visibleList(from flat: [FlatItem], collapsingID: UUID?) -> [Int] {
+        guard let collapsingID else {
+            return Array(flat.indices)
+        }
+        var result: [Int] = []
+        var skippingDepth: Int?
+        
+        for (idx, entry) in flat.enumerated() {
+            if let skipDepth = skippingDepth {
+                if entry.depth > skipDepth { continue }
+                skippingDepth = nil
+            }
+            result.append(idx)
+            if entry.id == collapsingID {
+                skippingDepth = entry.depth
+            }
+        }
+        return result
     }
 }

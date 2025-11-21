@@ -4,8 +4,12 @@ import SwiftData
 struct ChecklistRowView: View {
     @Bindable var item: ChecklistItem
     let depth: Int
+    var onDragStart: () -> Void = {}
+    var onDragEnd: () -> Void = {}
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.editMode) private var editMode
     @State private var dragOffset: CGFloat = 0
+    @State private var hasNotifiedDragStart = false
     
     static let DRAG_THRESHOLD: CGFloat = 20
     
@@ -49,6 +53,14 @@ struct ChecklistRowView: View {
         .offset(x: dragOffset)
         .animation(.interactiveSpring(response: 0.2, dampingFraction: 0.85), value: dragOffset)
         .contentShape(Rectangle())
+        .onDrag {
+            onDragStart()
+            return NSItemProvider(object: NSString(string: item.id.uuidString))
+        }
+        .onDrop(of: [.text], isTargeted: nil) { _, _ in
+            onDragEnd()
+            return false
+        }
         .contextMenu {
             Button(role: .destructive) {
                 deleteSelf()
@@ -78,7 +90,22 @@ struct ChecklistRowView: View {
             }
             .disabled(item.parent == nil)
         }
-        .draggable(item)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 1)
+                .onChanged { _ in
+                    guard editMode?.wrappedValue == .active else { return }
+                    if !hasNotifiedDragStart {
+                        hasNotifiedDragStart = true
+                        onDragStart()
+                    }
+                }
+                .onEnded { _ in
+                    if hasNotifiedDragStart {
+                        hasNotifiedDragStart = false
+                        onDragEnd()
+                    }
+                }
+        )
     }
     
     private func deleteSelf() {

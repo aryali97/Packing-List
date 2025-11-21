@@ -1,24 +1,23 @@
-//
-//  ContentView.swift
-//  Packing List
-//
-//  Created by Anirudh Ryali on 11/20/25.
-//
-
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            ListView(isTemplate: false)
+                .tabItem {
+                    Label("Trips", systemImage: "airplane")
+                }
+            
+            ListView(isTemplate: true)
+                .tabItem {
+                    Label("Templates", systemImage: "list.bullet.clipboard")
+                }
         }
-        .padding()
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: PackingList.self, inMemory: true)
 }

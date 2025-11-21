@@ -20,7 +20,7 @@ struct DetailView: View {
             }
             
             Section("Items") {
-                ForEach(packingList.rootItem.children?.sorted(by: { $0.sortOrder < $1.sortOrder }) ?? []) { item in
+                ForEach(packingList.rootItem.children.sorted(by: { $0.sortOrder < $1.sortOrder })) { item in
                     ChecklistRowView(item: item)
                 }
                 .onDelete(perform: deleteItems)
@@ -41,7 +41,7 @@ struct DetailView: View {
     private func addItem() {
         let rootItem = packingList.rootItem
         
-        let maxOrder = rootItem.children?.map { $0.sortOrder }.max() ?? -1
+        let maxOrder = rootItem.children.map { $0.sortOrder }.max() ?? -1
         let newItem = ChecklistItem(title: "New Item", sortOrder: maxOrder + 1)
         newItem.parent = rootItem
         
@@ -53,7 +53,7 @@ struct DetailView: View {
     
     private func deleteItems(offsets: IndexSet) {
         let rootItem = packingList.rootItem
-        guard let children = rootItem.children else { return }
+        let children = rootItem.children
         
         let sortedItems = children.sorted(by: { $0.sortOrder < $1.sortOrder })
         for index in offsets {
@@ -63,7 +63,7 @@ struct DetailView: View {
     
     private func moveItems(from source: IndexSet, to destination: Int) {
         let rootItem = packingList.rootItem
-        guard let children = rootItem.children else { return }
+        let children = rootItem.children
         
         print("🔵 moveItems called - from: \(source), to: \(destination)")
         var sortedItems = children.sorted(by: { $0.sortOrder < $1.sortOrder })

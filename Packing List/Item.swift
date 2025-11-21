@@ -17,7 +17,7 @@ final class ChecklistItem {
     
     // Recursive relationship
     @Relationship(deleteRule: .cascade, inverse: \ChecklistItem.parent)
-    var children: [ChecklistItem]?
+    var children: [ChecklistItem]
     
     @Relationship
     var parent: ChecklistItem?

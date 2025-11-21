@@ -97,7 +97,7 @@ struct ChecklistRowView: View {
     }
     
     private func deleteChild(offsets: IndexSet) {
-        guard let children = item.children else { return }
+        let children = item.children
         let sortedChildren = children.sorted(by: { $0.sortOrder < $1.sortOrder })
         for index in offsets {
             modelContext.delete(sortedChildren[index])
@@ -105,7 +105,7 @@ struct ChecklistRowView: View {
     }
     
     private func moveChild(from source: IndexSet, to destination: Int) {
-        guard let children = item.children else { return }
+        let children = item.children
         print("🔵 moveChild called - from: \(source), to: \(destination)")
         
         var sortedChildren = children.sorted(by: { $0.sortOrder < $1.sortOrder })
@@ -145,8 +145,8 @@ struct ChecklistRowView: View {
     
     private func canIndent() -> Bool {
         // Can indent if there's a previous sibling at the same level
-        guard let parent = item.parent,
-              let siblings = parent.children else { return false }
+        guard let parent = item.parent else { return false }
+        let siblings = parent.children
         
         let sortedSiblings = siblings.sorted(by: { $0.sortOrder < $1.sortOrder })
         guard let currentIndex = sortedSiblings.firstIndex(where: { $0.id == item.id }),
@@ -161,8 +161,8 @@ struct ChecklistRowView: View {
             return
         }
         
-        guard let parent = item.parent,
-              let siblings = parent.children else { return }
+        guard let parent = item.parent else { return }
+        let siblings = parent.children
         
         let sortedSiblings = siblings.sorted(by: { $0.sortOrder < $1.sortOrder })
         guard let currentIndex = sortedSiblings.firstIndex(where: { $0.id == item.id }),
@@ -174,7 +174,7 @@ struct ChecklistRowView: View {
         
         // Change parent to previous sibling
         item.parent = previousSibling
-        let maxOrder = previousSibling.children?.map { $0.sortOrder }.max() ?? -1
+        let maxOrder = previousSibling.children.map { $0.sortOrder }.max() ?? -1
         item.sortOrder = maxOrder + 1
         
         // Force a save to trigger SwiftData updates BEFORE animation
@@ -196,11 +196,11 @@ struct ChecklistRowView: View {
         item.parent = newParent
         
         if let grandparent = newParent {
-            let maxOrder = grandparent.children?.map { $0.sortOrder }.max() ?? -1
+            let maxOrder = grandparent.children.map { $0.sortOrder }.max() ?? -1
             item.sortOrder = maxOrder + 1
         } else {
             // Moving to root level (parent is the invisible root)
-            let maxOrder = newParent?.children?.map { $0.sortOrder }.max() ?? -1
+            let maxOrder = newParent?.children.map { $0.sortOrder }.max() ?? -1
             item.sortOrder = maxOrder + 1
         }
         

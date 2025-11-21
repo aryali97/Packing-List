@@ -70,7 +70,8 @@ struct CreateTripView: View {
         // Deep copy items from selected templates
         for template in selectedTemplates {
             let templateRoot = template.rootItem
-            guard let templateChildren = templateRoot.children else { continue }
+            let templateChildren = templateRoot.children
+            guard !templateChildren.isEmpty else { continue }
             
             let newTripRoot = newTrip.rootItem
             
@@ -88,11 +89,9 @@ struct CreateTripView: View {
     private func deepCopy(item: ChecklistItem) -> ChecklistItem {
         let newItem = ChecklistItem(title: item.title, isCompleted: false, isSkipped: false, sortOrder: item.sortOrder)
         
-        if let children = item.children {
-            for child in children {
-                let newChild = deepCopy(item: child)
-                newChild.parent = newItem
-            }
+        for child in item.children {
+            let newChild = deepCopy(item: child)
+            newChild.parent = newItem
         }
         
         return newItem

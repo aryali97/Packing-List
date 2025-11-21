@@ -7,6 +7,8 @@ struct ChecklistRowView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var dragOffset: CGFloat = 0
     
+    static let DRAG_THRESHOLD: CGFloat = 20
+    
     private var baseIndent: CGFloat {
         CGFloat(max(depth - 1, 0)) * 20
     }
@@ -148,9 +150,10 @@ struct ChecklistRowView: View {
         let vertical = abs(translation.height)
         guard abs(horizontal) > vertical else { return }
         
-        if horizontal > 40 {
+        print("🔵 handleHorizontalDrag horizontal: \(horizontal)")
+        if horizontal > ChecklistRowView.DRAG_THRESHOLD {
             indentItem()
-        } else if horizontal < -40, canOutdent() {
+        } else if horizontal < -ChecklistRowView.DRAG_THRESHOLD, canOutdent() {
             outdentItem()
         }
         dragOffset = 0

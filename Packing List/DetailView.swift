@@ -31,8 +31,9 @@ struct DetailView: View {
                 }
             }
         }
-        .dropDestination(for: String.self) { items, location in
-            guard let draggedIdString = items.first,
+        .dropDestination(for: Data.self) { items, location in
+            guard let draggedData = items.first,
+                  let draggedIdString = String(data: draggedData, encoding: .utf8),
                   let draggedId = UUID(uuidString: draggedIdString) else { return false }
             
             moveItemToRoot(draggedId: draggedId)

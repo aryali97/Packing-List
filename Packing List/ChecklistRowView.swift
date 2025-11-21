@@ -15,15 +15,7 @@ struct ChecklistRowView: View {
     }
     
     var body: some View {
-        DisclosureGroup(isExpanded: $isExpanded) {
-            if !children.isEmpty {
-                ForEach(children) { child in
-                    ChecklistRowView(item: child)
-                }
-                .onDelete(perform: deleteChild)
-                .onMove(perform: moveChild)
-            }
-        } label: {
+        let labelContent = {
             HStack(spacing: 12) {
                 // Drag handle icon - only this should trigger reordering
                 Image(systemName: "line.3.horizontal")
@@ -80,6 +72,22 @@ struct ChecklistRowView: View {
                     Label("Outdent", systemImage: "decrease.indent")
                 }
                 .disabled(item.parent == nil)
+            }
+        }
+        
+        Group {
+            if children.isEmpty {
+                labelContent()
+            } else {
+                DisclosureGroup(isExpanded: $isExpanded) {
+                    ForEach(children) { child in
+                        ChecklistRowView(item: child)
+                    }
+                    .onDelete(perform: deleteChild)
+                    .onMove(perform: moveChild)
+                } label: {
+                    labelContent()
+                }
             }
         }
         .draggable(item)

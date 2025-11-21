@@ -26,7 +26,7 @@ struct PackingListCard: View {
             
             HStack {
                 Image(systemName: "checklist")
-                Text("\(packingList.items.count) items")
+                Text("\(packingList.rootItem.children?.count ?? 0) items")
             }
             .font(.caption)
             .foregroundStyle(.secondary)

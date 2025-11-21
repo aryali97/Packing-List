@@ -75,57 +75,6 @@ struct ChecklistRowView: View {
             }
         }
         .draggable(item)
-        .dropDestination(for: ChecklistItem.self) { droppedItems, location in
-            guard let draggedItem = droppedItems.first else { return false }
-            print("🔵 Attempting to nest item \(draggedItem.id) under \(item.title)")
-            nestItem(draggedItem: draggedItem)
-            return true
-        }
-    }
-    
-    private func nestItem(draggedItem: ChecklistItem) {
-        // Fetch the real items from context
-        let draggedDescriptor = FetchDescriptor<ChecklistItem>(predicate: #Predicate { $0.id == draggedItem.id })
-        guard let realDraggedItem = try? modelContext.fetch(draggedDescriptor).first else {
-            print("🔴 Failed to fetch dragged item")
-            return
-        }
-        
-        // Prevent nesting an item under itself
-        guard realDraggedItem.id != item.id else {
-            print("🔴 Cannot nest item under itself")
-            return
-        }
-        
-        // Prevent circular nesting (e.g., nesting a parent under its own child)
-        var current = item.parent
-        while let parent = current {
-            if parent.id == realDraggedItem.id {
-                print("🔴 Circular nesting prevented")
-                return
-            }
-            current = parent.parent
-        }
-        
-        print("🟢 Nesting \(realDraggedItem.title) under \(item.title)")
-        
-        // Remove from old parent or root list
-        if let oldList = realDraggedItem.packingList {
-            oldList.items.removeAll(where: { $0.id == realDraggedItem.id })
-            realDraggedItem.packingList = nil
-        }
-        
-        // Set new parent
-        realDraggedItem.parent = item
-        
-        // Calculate sort order for the new child
-        let maxOrder = item.children?.map { $0.sortOrder }.max() ?? -1
-        realDraggedItem.sortOrder = maxOrder + 1
-        
-        // Expand to show the new child
-        isExpanded = true
-        
-        print("✅ Nesting complete")
     }
     
     private func addChild() {
@@ -188,21 +137,11 @@ struct ChecklistRowView: View {
     
     private func canIndent() -> Bool {
         // Can indent if there's a previous sibling at the same level
-        guard let packingList = item.packingList else {
-            // If item has a parent, check siblings
-            guard let parent = item.parent,
-                  let siblings = parent.children else { return false }
-            
-            let sortedSiblings = siblings.sorted(by: { $0.sortOrder < $1.sortOrder })
-            guard let currentIndex = sortedSiblings.firstIndex(where: { $0.id == item.id }),
-                  currentIndex > 0 else { return false }
-            
-            return true
-        }
+        guard let parent = item.parent,
+              let siblings = parent.children else { return false }
         
-        // Root level item - check if there's a previous item
-        let sortedItems = packingList.items.sorted(by: { $0.sortOrder < $1.sortOrder })
-        guard let currentIndex = sortedItems.firstIndex(where: { $0.id == item.id }),
+        let sortedSiblings = siblings.sorted(by: { $0.sortOrder < $1.sortOrder })
+        guard let currentIndex = sortedSiblings.firstIndex(where: { $0.id == item.id }),
               currentIndex > 0 else { return false }
         
         return true
@@ -214,48 +153,27 @@ struct ChecklistRowView: View {
             return
         }
         
+        guard let parent = item.parent,
+              let siblings = parent.children else { return }
+        
         withAnimation {
-            if let packingList = item.packingList {
-                // Root level item
-                let sortedItems = packingList.items.sorted(by: { $0.sortOrder < $1.sortOrder })
-                guard let currentIndex = sortedItems.firstIndex(where: { $0.id == item.id }),
-                      currentIndex > 0 else { return }
-                
-                let previousItem = sortedItems[currentIndex - 1]
-                
-                print("🟢 Indenting \(item.title) under \(previousItem.title)")
-                
-                // Remove from root list
-                packingList.items.removeAll(where: { $0.id == item.id })
-                item.packingList = nil
-                
-                // Add as child of previous item
-                item.parent = previousItem
-                let maxOrder = previousItem.children?.map { $0.sortOrder }.max() ?? -1
-                item.sortOrder = maxOrder + 1
-                
-                print("✅ Indent complete")
-            } else if let parent = item.parent,
-                      let siblings = parent.children {
-                // Child item - indent under previous sibling
-                let sortedSiblings = siblings.sorted(by: { $0.sortOrder < $1.sortOrder })
-                guard let currentIndex = sortedSiblings.firstIndex(where: { $0.id == item.id }),
-                      currentIndex > 0 else { return }
-                
-                let previousSibling = sortedSiblings[currentIndex - 1]
-                
-                print("🟢 Indenting \(item.title) under \(previousSibling.title)")
-                
-                // Change parent
-                item.parent = previousSibling
-                let maxOrder = previousSibling.children?.map { $0.sortOrder }.max() ?? -1
-                item.sortOrder = maxOrder + 1
-                
-                print("✅ Indent complete")
-            }
+            let sortedSiblings = siblings.sorted(by: { $0.sortOrder < $1.sortOrder })
+            guard let currentIndex = sortedSiblings.firstIndex(where: { $0.id == item.id }),
+                  currentIndex > 0 else { return }
+            
+            let previousSibling = sortedSiblings[currentIndex - 1]
+            
+            print("🟢 Indenting \(item.title) under \(previousSibling.title)")
+            
+            // Change parent to previous sibling
+            item.parent = previousSibling
+            let maxOrder = previousSibling.children?.map { $0.sortOrder }.max() ?? -1
+            item.sortOrder = maxOrder + 1
             
             // Force a save to trigger SwiftData updates
             try? modelContext.save()
+            
+            print("✅ Indent complete")
         }
     }
     
@@ -268,21 +186,16 @@ struct ChecklistRowView: View {
         print("🟢 Outdenting \(item.title)")
         
         withAnimation {
+            // Move to grandparent's children (or root if grandparent is the invisible root)
+            item.parent = currentParent.parent
+            
             if let grandparent = currentParent.parent {
-                // Move to grandparent's children
-                item.parent = grandparent
                 let maxOrder = grandparent.children?.map { $0.sortOrder }.max() ?? -1
                 item.sortOrder = maxOrder + 1
-            } else if let packingList = currentParent.packingList {
-                // Move to root level
-                item.parent = nil
-                item.packingList = packingList
-                let maxOrder = packingList.items.map { $0.sortOrder }.max() ?? -1
+            } else {
+                // Moving to root level (parent is the invisible root)
+                let maxOrder = currentParent.parent?.children?.map { $0.sortOrder }.max() ?? -1
                 item.sortOrder = maxOrder + 1
-                
-                if !packingList.items.contains(where: { $0.id == item.id }) {
-                    packingList.items.append(item)
-                }
             }
             
             // Force a save to trigger SwiftData updates

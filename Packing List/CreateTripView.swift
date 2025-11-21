@@ -69,9 +69,14 @@ struct CreateTripView: View {
         
         // Deep copy items from selected templates
         for template in selectedTemplates {
-            for item in template.items {
+            let templateRoot = template.rootItem
+            guard let templateChildren = templateRoot.children else { continue }
+            
+            let newTripRoot = newTrip.rootItem
+            
+            for item in templateChildren {
                 let copiedItem = deepCopy(item: item)
-                copiedItem.packingList = newTrip
+                copiedItem.parent = newTripRoot
             }
         }
         
@@ -81,13 +86,12 @@ struct CreateTripView: View {
     
     // Recursive deep copy function
     private func deepCopy(item: ChecklistItem) -> ChecklistItem {
-        let newItem = ChecklistItem(title: item.title, isCompleted: false, isSkipped: false)
+        let newItem = ChecklistItem(title: item.title, isCompleted: false, isSkipped: false, sortOrder: item.sortOrder)
         
         if let children = item.children {
             for child in children {
                 let newChild = deepCopy(item: child)
                 newChild.parent = newItem
-                // newItem.children?.append(newChild) // Relationship handled by setting parent
             }
         }
         

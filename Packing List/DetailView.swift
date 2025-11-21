@@ -20,7 +20,7 @@ struct DetailView: View {
             }
             
             Section("Items") {
-                ForEach(packingList.items.sorted(by: { $0.sortOrder < $1.sortOrder })) { item in
+                ForEach(packingList.rootItem.children?.sorted(by: { $0.sortOrder < $1.sortOrder }) ?? []) { item in
                     ChecklistRowView(item: item)
                 }
                 .onDelete(perform: deleteItems)
@@ -39,23 +39,34 @@ struct DetailView: View {
     }
     
     private func addItem() {
-        let maxOrder = packingList.items.map { $0.sortOrder }.max() ?? -1
+        let rootItem = packingList.rootItem
+        
+        let maxOrder = rootItem.children?.map { $0.sortOrder }.max() ?? -1
         let newItem = ChecklistItem(title: "New Item", sortOrder: maxOrder + 1)
-        newItem.packingList = packingList
-        packingList.items.append(newItem) // Explicitly append to trigger UI update
-        // modelContext.insert(newItem) // Not needed if appended to relationship
+        newItem.parent = rootItem
+        
+        modelContext.insert(newItem)
+        
+        // Force save to update the relationship and trigger UI refresh
+        try? modelContext.save()
     }
     
     private func deleteItems(offsets: IndexSet) {
-        let sortedItems = packingList.items.sorted(by: { $0.sortOrder < $1.sortOrder })
+        let rootItem = packingList.rootItem
+        guard let children = rootItem.children else { return }
+        
+        let sortedItems = children.sorted(by: { $0.sortOrder < $1.sortOrder })
         for index in offsets {
             modelContext.delete(sortedItems[index])
         }
     }
     
     private func moveItems(from source: IndexSet, to destination: Int) {
-        print("� moveItems called - from: \(source), to: \(destination)")
-        var sortedItems = packingList.items.sorted(by: { $0.sortOrder < $1.sortOrder })
+        let rootItem = packingList.rootItem
+        guard let children = rootItem.children else { return }
+        
+        print("🔵 moveItems called - from: \(source), to: \(destination)")
+        var sortedItems = children.sorted(by: { $0.sortOrder < $1.sortOrder })
         sortedItems.move(fromOffsets: source, toOffset: destination)
         
         // Update sort orders

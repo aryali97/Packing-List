@@ -22,8 +22,6 @@ final class ChecklistItem {
     @Relationship
     var parent: ChecklistItem?
     
-    var packingList: PackingList?
-    
     init(title: String, isCompleted: Bool = false, isSkipped: Bool = false, sortOrder: Int = 0) {
         self.id = UUID()
         self.title = title

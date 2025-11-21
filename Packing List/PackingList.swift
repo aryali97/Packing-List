@@ -9,9 +9,9 @@ final class PackingList {
     var tripDate: Date?
     var colorHex: String
     
-    // Root items
-    @Relationship(deleteRule: .cascade, inverse: \ChecklistItem.packingList)
-    var items: [ChecklistItem] = []
+    // Single root item (invisible container for all items)
+    @Relationship(deleteRule: .cascade)
+    var rootItem: ChecklistItem
     
     init(name: String, isTemplate: Bool = false, tripDate: Date? = nil, colorHex: String = "#007AFF") {
         self.id = UUID()
@@ -19,5 +19,9 @@ final class PackingList {
         self.isTemplate = isTemplate
         self.tripDate = tripDate
         self.colorHex = colorHex
+        
+        // Create invisible root item
+        let root = ChecklistItem(title: "", sortOrder: 0)
+        self.rootItem = root
     }
 }

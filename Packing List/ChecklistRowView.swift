@@ -11,7 +11,9 @@ struct ChecklistRowView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var hasNotifiedDragStart = false
     
-    static let DRAG_THRESHOLD: CGFloat = 20
+    private enum Constants {
+        static let dragThreshold: CGFloat = 25
+    }
     
     private var baseIndent: CGFloat {
         CGFloat(max(depth - 1, 0)) * 20
@@ -174,10 +176,9 @@ struct ChecklistRowView: View {
         let vertical = abs(translation.height)
         guard abs(horizontal) > vertical else { return }
         
-        print("🔵 handleHorizontalDrag horizontal: \(horizontal)")
-        if horizontal > ChecklistRowView.DRAG_THRESHOLD {
+        if horizontal > Constants.dragThreshold {
             indentItem()
-        } else if horizontal < -ChecklistRowView.DRAG_THRESHOLD, canOutdent() {
+        } else if horizontal < -Constants.dragThreshold, canOutdent() {
             outdentItem()
         }
         dragOffset = 0

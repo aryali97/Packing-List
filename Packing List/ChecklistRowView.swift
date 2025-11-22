@@ -23,9 +23,11 @@ struct ChecklistRowView: View {
     var body: some View {
         HStack(spacing: 12) {
             // Drag handle icon - only this should trigger reordering
-            Image(systemName: "line.3.horizontal")
+            Image("DragHandle")
+                .resizable()
+                .renderingMode(.template)
                 .foregroundColor(.secondary)
-                .font(.system(size: 14))
+                .frame(width: 16, height: 16)
                 .frame(width: 20)
                 .highPriorityGesture(
                     DragGesture(minimumDistance: 20)

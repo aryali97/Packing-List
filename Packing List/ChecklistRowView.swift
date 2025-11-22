@@ -43,8 +43,6 @@ struct ChecklistRowView: View {
             // Main content area
             HStack(spacing: 8) {
                 TextField("Item", text: $item.title)
-                    .strikethrough(item.isSkipped)
-                    .opacity(item.isSkipped ? 0.5 : 1.0)
                     .focused($isEditing)
                 
                 Spacer()
@@ -57,9 +55,6 @@ struct ChecklistRowView: View {
                     }
                     .buttonStyle(.plain)
                     .transition(.opacity)
-                } else if item.isSkipped {
-                    Image(systemName: "nosign")
-                        .foregroundColor(.secondary)
                 }
             }
             .contentShape(Rectangle())
@@ -85,14 +80,6 @@ struct ChecklistRowView: View {
             } label: {
                 Label("Delete", systemImage: "trash")
             }
-            
-            Button {
-                item.isSkipped.toggle()
-            } label: {
-                Label(item.isSkipped ? "Unskip" : "Skip", systemImage: "nosign")
-            }
-            
-            Divider()
             
             Button {
                 indentItem()

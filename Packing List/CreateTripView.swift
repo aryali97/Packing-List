@@ -87,7 +87,7 @@ struct CreateTripView: View {
     
     // Recursive deep copy function
     private func deepCopy(item: ChecklistItem) -> ChecklistItem {
-        let newItem = ChecklistItem(title: item.title, isCompleted: false, isSkipped: false, sortOrder: item.sortOrder)
+        let newItem = ChecklistItem(title: item.title, isCompleted: false, sortOrder: item.sortOrder)
         
         for child in item.children {
             let newChild = deepCopy(item: child)

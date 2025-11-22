@@ -12,7 +12,6 @@ final class ChecklistItem {
     var id: UUID
     var title: String
     var isCompleted: Bool
-    var isSkipped: Bool
     var sortOrder: Int
     
     // Recursive relationship
@@ -22,11 +21,10 @@ final class ChecklistItem {
     @Relationship
     var parent: ChecklistItem?
     
-    init(title: String, isCompleted: Bool = false, isSkipped: Bool = false, sortOrder: Int = 0) {
+    init(title: String, isCompleted: Bool = false, sortOrder: Int = 0) {
         self.id = UUID()
         self.title = title
         self.isCompleted = isCompleted
-        self.isSkipped = isSkipped
         self.sortOrder = sortOrder
         self.children = []
     }

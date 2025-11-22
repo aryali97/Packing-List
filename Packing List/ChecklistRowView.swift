@@ -47,7 +47,15 @@ struct ChecklistRowView: View {
                 
                 Spacer()
                 
-                if item.isSkipped {
+                if isEditing {
+                    Button(action: deleteSelf) {
+                        Image(systemName: "xmark")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 14))
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
+                } else if item.isSkipped {
                     Image(systemName: "nosign")
                         .foregroundColor(.secondary)
                 }
@@ -102,6 +110,7 @@ struct ChecklistRowView: View {
     
     private func deleteSelf() {
         modelContext.delete(item)
+        try? modelContext.save()
     }
     
     // MARK: - Indent/Outdent Logic

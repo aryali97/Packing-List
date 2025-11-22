@@ -6,6 +6,9 @@ struct DetailView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var draggingItemID: UUID?
     
+    // Query all items to make the view reactive to deletions/changes
+    @Query private var allItems: [ChecklistItem]
+    
     private struct FlatItem: Identifiable {
         let id: UUID
         let item: ChecklistItem

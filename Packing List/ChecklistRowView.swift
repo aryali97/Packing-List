@@ -4,8 +4,12 @@ import SwiftData
 struct ChecklistRowView: View {
     @Bindable var item: ChecklistItem
     let depth: Int
+    var showCheckbox: Bool = false
+    var isInCompletedSection: Bool = false
+    var isImmutable: Bool = false
     var onDragStart: () -> Void = {}
     var onDragEnd: () -> Void = {}
+    var onCheckToggle: () -> Void = {}
     @Environment(\.modelContext) private var modelContext
     @Environment(\.editMode) private var editMode
     @State private var dragOffset: CGFloat = 0
@@ -22,32 +26,56 @@ struct ChecklistRowView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Drag handle icon - only this should trigger reordering
-            Image("DragHandle")
-                .resizable()
-                .renderingMode(.template)
-                .foregroundColor(.secondary)
-                .frame(width: 16, height: 16)
-                .frame(width: 20)
-                .highPriorityGesture(
-                    DragGesture(minimumDistance: 20)
-                        .onChanged { value in
-                            handleHorizontalDragChanged(translation: value.translation)
-                        }
-                        .onEnded { value in
-                            handleHorizontalDrag(translation: value.translation)
-                            dragOffset = 0
-                        }
-                )
+            // Checkbox (only for non-template trips)
+            if showCheckbox {
+                Button(action: {
+                    if !isImmutable {
+                        onCheckToggle()
+                    }
+                }) {
+                    Image(systemName: item.isCompleted ? "checkmark.square.fill" : "square")
+                        .foregroundColor(isImmutable ? .secondary.opacity(0.5) : .primary)
+                        .font(.system(size: 20))
+                }
+                .buttonStyle(.plain)
+                .disabled(isImmutable)
+            }
+            
+            // Drag handle icon - only show if not in completed section
+            if isInCompletedSection {
+                // Preserve spacing where drag handle would be
+                Color.clear
+                    .frame(width: 20, height: 16)
+            } else {
+                Image("DragHandle")
+                    .resizable()
+                    .renderingMode(.template)
+                    .foregroundColor(.secondary)
+                    .frame(width: 16, height: 16)
+                    .frame(width: 20)
+                    .highPriorityGesture(
+                        DragGesture(minimumDistance: 20)
+                            .onChanged { value in
+                                handleHorizontalDragChanged(translation: value.translation)
+                            }
+                            .onEnded { value in
+                                handleHorizontalDrag(translation: value.translation)
+                                dragOffset = 0
+                            }
+                    )
+            }
             
             // Main content area
             HStack(spacing: 8) {
                 TextField("Item", text: $item.title)
                     .focused($isEditing)
+                    .disabled(isImmutable || isInCompletedSection)
+                    .strikethrough(item.isCompleted && isInCompletedSection)
+                    .opacity((item.isCompleted && isInCompletedSection) ? 0.6 : 1.0)
                 
                 Spacer()
                 
-                if isEditing {
+                if isEditing && !isImmutable && !isInCompletedSection {
                     Button(action: deleteSelf) {
                         Image(systemName: "xmark")
                             .foregroundColor(.secondary)
@@ -59,7 +87,9 @@ struct ChecklistRowView: View {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                isEditing = true
+                if !isImmutable && !isInCompletedSection {
+                    isEditing = true
+                }
             }
         }
         .padding(.leading, baseIndent)
@@ -67,33 +97,40 @@ struct ChecklistRowView: View {
         .animation(.interactiveSpring(response: 0.2, dampingFraction: 0.85), value: dragOffset)
         .contentShape(Rectangle())
         .onDrag {
-            onDragStart()
-            return NSItemProvider(object: NSString(string: item.id.uuidString))
+            if !isInCompletedSection {
+                onDragStart()
+                return NSItemProvider(object: NSString(string: item.id.uuidString))
+            }
+            return NSItemProvider()
         }
         .onDrop(of: [.text], isTargeted: nil) { _, _ in
-            onDragEnd()
+            if !isInCompletedSection {
+                onDragEnd()
+            }
             return false
         }
         .contextMenu {
-            Button(role: .destructive) {
-                deleteSelf()
-            } label: {
-                Label("Delete", systemImage: "trash")
+            if !isImmutable && !isInCompletedSection {
+                Button(role: .destructive) {
+                    deleteSelf()
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+                
+                Button {
+                    indentItem()
+                } label: {
+                    Label("Indent", systemImage: "increase.indent")
+                }
+                .disabled(!canIndent())
+                
+                Button {
+                    outdentItem()
+                } label: {
+                    Label("Outdent", systemImage: "decrease.indent")
+                }
+                .disabled(item.parent == nil)
             }
-            
-            Button {
-                indentItem()
-            } label: {
-                Label("Indent", systemImage: "increase.indent")
-            }
-            .disabled(!canIndent())
-            
-            Button {
-                outdentItem()
-            } label: {
-                Label("Outdent", systemImage: "decrease.indent")
-            }
-            .disabled(item.parent == nil)
         }
     }
     

@@ -25,6 +25,44 @@ struct DetailView: View {
         return visibleList(from: flat, collapsingID: draggingItemID).map { flat[$0] }
     }
     
+    // Items that are not completed
+    private var uncompletedItems: [FlatItem] {
+        flatItems.filter { !$0.item.isCompleted }
+    }
+    
+    // Completed items with their parent chain preserved
+    private var completedItemsWithParents: [FlatItem] {
+        var result: [FlatItem] = []
+        var includedIDs = Set<UUID>()
+        
+        // First pass: collect all completed items
+        let completedItems = flatItems.filter { $0.item.isCompleted }
+        
+        for completedItem in completedItems {
+            // Add ancestor chain
+            var current: ChecklistItem? = completedItem.item
+            var ancestorChain: [ChecklistItem] = []
+            
+            while let item = current, item.parent != nil {
+                ancestorChain.append(item)
+                current = item.parent
+            }
+            
+            // Add ancestors to result (in reverse order, from root to leaf)
+            for ancestor in ancestorChain.reversed() {
+                if !includedIDs.contains(ancestor.id) {
+                    includedIDs.insert(ancestor.id)
+                    // Find the FlatItem for this ancestor
+                    if let flatItem = flatItems.first(where: { $0.id == ancestor.id }) {
+                        result.append(flatItem)
+                    }
+                }
+            }
+        }
+        
+        return result
+    }
+    
     var body: some View {
         List {
             Section("Details") {
@@ -38,19 +76,55 @@ struct DetailView: View {
                 }
             }
             
+            // Main items section
             Section("Items") {
-                ForEach(visibleItems) { flat in
-                    ChecklistRowView(
-                        item: flat.item,
-                        depth: flat.depth,
-                        onDragStart: { draggingItemID = flat.item.id },
-                        onDragEnd: { draggingItemID = nil }
-                    )
+                if packingList.isTemplate {
+                    // Template view - no checkboxes
+                    ForEach(visibleItems) { flat in
+                        ChecklistRowView(
+                            item: flat.item,
+                            depth: flat.depth,
+                            showCheckbox: false,
+                            onDragStart: { draggingItemID = flat.item.id },
+                            onDragEnd: { draggingItemID = nil }
+                        )
+                    }
+                    .onMove(perform: moveItems)
+                } else {
+                    // Trip view - show checkboxes and uncompleted items only
+                    ForEach(uncompletedItems) { flat in
+                        ChecklistRowView(
+                            item: flat.item,
+                            depth: flat.depth,
+                            showCheckbox: true,
+                            isInCompletedSection: false,
+                            isImmutable: false,
+                            onDragStart: { draggingItemID = flat.item.id },
+                            onDragEnd: { draggingItemID = nil },
+                            onCheckToggle: { toggleItemCompletion(item: flat.item) }
+                        )
+                    }
+                    .onMove(perform: moveItems)
                 }
-                .onMove(perform: moveItems)
                 
                 Button(action: addItem) {
                     Label("Add Item", systemImage: "plus")
+                }
+            }
+            
+            // Completed section (only for trips, not templates)
+            if !packingList.isTemplate && !completedItemsWithParents.isEmpty {
+                Section("Completed") {
+                    ForEach(completedItemsWithParents) { flat in
+                        ChecklistRowView(
+                            item: flat.item,
+                            depth: flat.depth,
+                            showCheckbox: true,
+                            isInCompletedSection: true,
+                            isImmutable: !flat.item.isCompleted,
+                            onCheckToggle: { toggleItemCompletion(item: flat.item) }
+                        )
+                    }
                 }
             }
         }
@@ -65,13 +139,28 @@ struct DetailView: View {
         let rootItem = packingList.rootItem
         
         let maxOrder = rootItem.children.map { $0.sortOrder }.max() ?? -1
-        let newItem = ChecklistItem(title: "", sortOrder: maxOrder + 1)
+        let newItem = ChecklistItem(title: "New Item", sortOrder: maxOrder + 1)
         newItem.parent = rootItem
         
         modelContext.insert(newItem)
         
         // Force save to update the relationship and trigger UI refresh
         try? modelContext.save()
+    }
+    
+    // Toggle completion and handle children recursively
+    private func toggleItemCompletion(item: ChecklistItem) {
+        let newCompletionState = !item.isCompleted
+        setCompletionRecursively(item: item, isCompleted: newCompletionState)
+        try? modelContext.save()
+    }
+    
+    // Recursively set completion state for item and all children
+    private func setCompletionRecursively(item: ChecklistItem, isCompleted: Bool) {
+        item.isCompleted = isCompleted
+        for child in item.children {
+            setCompletionRecursively(item: child, isCompleted: isCompleted)
+        }
     }
     
     private func moveItems(from source: IndexSet, to destination: Int) {

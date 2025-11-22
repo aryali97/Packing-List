@@ -10,6 +10,7 @@ struct ChecklistRowView: View {
     @Environment(\.editMode) private var editMode
     @State private var dragOffset: CGFloat = 0
     @State private var hasNotifiedDragStart = false
+    @FocusState private var isEditing: Bool
     
     private enum Constants {
         static let dragThreshold: CGFloat = 25
@@ -42,6 +43,7 @@ struct ChecklistRowView: View {
                 TextField("Item Name", text: $item.title)
                     .strikethrough(item.isSkipped)
                     .opacity(item.isSkipped ? 0.5 : 1.0)
+                    .focused($isEditing)
                 
                 Spacer()
                 
@@ -49,6 +51,10 @@ struct ChecklistRowView: View {
                     Image(systemName: "nosign")
                         .foregroundColor(.secondary)
                 }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                isEditing = true
             }
         }
         .padding(.leading, baseIndent)

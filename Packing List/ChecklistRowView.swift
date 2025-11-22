@@ -40,7 +40,7 @@ struct ChecklistRowView: View {
             
             // Main content area
             HStack(spacing: 8) {
-                TextField("Item Name", text: $item.title)
+                TextField("Item", text: $item.title)
                     .strikethrough(item.isSkipped)
                     .opacity(item.isSkipped ? 0.5 : 1.0)
                     .focused($isEditing)

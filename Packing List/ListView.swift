@@ -59,7 +59,7 @@ struct ListView: View {
     private func addItem() {
         if isTemplate {
             withAnimation {
-                let newItem = PackingList(name: "New Template", isTemplate: true)
+                let newItem = PackingList(name: "", isTemplate: true)
                 modelContext.insert(newItem)
             }
         } else {

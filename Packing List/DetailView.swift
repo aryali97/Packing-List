@@ -28,7 +28,7 @@ struct DetailView: View {
     var body: some View {
         List {
             Section("Details") {
-                TextField("Trip Name", text: $packingList.name)
+                TextField("Name", text: $packingList.name)
                 if !packingList.isTemplate {
                     DatePicker("Trip Date", selection: Binding(get: {
                         packingList.tripDate ?? Date()
@@ -65,7 +65,7 @@ struct DetailView: View {
         let rootItem = packingList.rootItem
         
         let maxOrder = rootItem.children.map { $0.sortOrder }.max() ?? -1
-        let newItem = ChecklistItem(title: "New Item", sortOrder: maxOrder + 1)
+        let newItem = ChecklistItem(title: "", sortOrder: maxOrder + 1)
         newItem.parent = rootItem
         
         modelContext.insert(newItem)

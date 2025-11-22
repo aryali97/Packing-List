@@ -92,22 +92,6 @@ struct ChecklistRowView: View {
             }
             .disabled(item.parent == nil)
         }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 1)
-                .onChanged { _ in
-                    guard editMode?.wrappedValue == .active else { return }
-                    if !hasNotifiedDragStart {
-                        hasNotifiedDragStart = true
-                        onDragStart()
-                    }
-                }
-                .onEnded { _ in
-                    if hasNotifiedDragStart {
-                        hasNotifiedDragStart = false
-                        onDragEnd()
-                    }
-                }
-        )
     }
     
     private func deleteSelf() {

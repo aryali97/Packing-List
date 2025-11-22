@@ -16,7 +16,7 @@
 		85B860B32ECFFF6A003D93BC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860A72ECFFF6A003D93BC /* ContentView.swift */; };
 		85B860B42ECFFF6A003D93BC /* CreateTripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860A82ECFFF6A003D93BC /* CreateTripView.swift */; };
 		85B860B52ECFFF6A003D93BC /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860A92ECFFF6A003D93BC /* DetailView.swift */; };
-		85B860B62ECFFF6A003D93BC /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860AA2ECFFF6A003D93BC /* Item.swift */; };
+		85B860B62ECFFF6A003D93BC /* ChecklistItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860AA2ECFFF6A003D93BC /* ChecklistItem.swift */; };
 		85B860B72ECFFF6A003D93BC /* ListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860AB2ECFFF6A003D93BC /* ListView.swift */; };
 		85B860B82ECFFF6A003D93BC /* Packing_ListApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860AC2ECFFF6A003D93BC /* Packing_ListApp.swift */; };
 		85B860B92ECFFF6A003D93BC /* PackingList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860AD2ECFFF6A003D93BC /* PackingList.swift */; };
@@ -53,7 +53,7 @@
 		85B860A72ECFFF6A003D93BC /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		85B860A82ECFFF6A003D93BC /* CreateTripView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CreateTripView.swift; sourceTree = "<group>"; };
 		85B860A92ECFFF6A003D93BC /* DetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
-		85B860AA2ECFFF6A003D93BC /* Item.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
+		85B860AA2ECFFF6A003D93BC /* ChecklistItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChecklistItem.swift; sourceTree = "<group>"; };
 		85B860AB2ECFFF6A003D93BC /* ListView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
 		85B860AC2ECFFF6A003D93BC /* Packing_ListApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Packing_ListApp.swift; sourceTree = "<group>"; };
 		85B860AD2ECFFF6A003D93BC /* PackingList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PackingList.swift; sourceTree = "<group>"; };
@@ -139,7 +139,7 @@
 				85B860A72ECFFF6A003D93BC /* ContentView.swift */,
 				85B860A82ECFFF6A003D93BC /* CreateTripView.swift */,
 				85B860A92ECFFF6A003D93BC /* DetailView.swift */,
-				85B860AA2ECFFF6A003D93BC /* Item.swift */,
+				85B860AA2ECFFF6A003D93BC /* ChecklistItem.swift */,
 				85B860AB2ECFFF6A003D93BC /* ListView.swift */,
 				85B860AC2ECFFF6A003D93BC /* Packing_ListApp.swift */,
 				85B860AD2ECFFF6A003D93BC /* PackingList.swift */,
@@ -285,7 +285,7 @@
 				85B860B32ECFFF6A003D93BC /* ContentView.swift in Sources */,
 				85B860BA2ECFFF6A003D93BC /* PackingListCard.swift in Sources */,
 				85B860B82ECFFF6A003D93BC /* Packing_ListApp.swift in Sources */,
-				85B860B62ECFFF6A003D93BC /* Item.swift in Sources */,
+				85B860B62ECFFF6A003D93BC /* ChecklistItem.swift in Sources */,
 				85B860B42ECFFF6A003D93BC /* CreateTripView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

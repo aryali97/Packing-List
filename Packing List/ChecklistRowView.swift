@@ -26,21 +26,6 @@ struct ChecklistRowView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Checkbox (only for non-template trips)
-            if showCheckbox {
-                Button(action: {
-                    if !isImmutable {
-                        onCheckToggle()
-                    }
-                }) {
-                    Image(systemName: item.isCompleted ? "checkmark.square.fill" : "square")
-                        .foregroundColor(isImmutable ? .secondary.opacity(0.5) : .primary)
-                        .font(.system(size: 20))
-                }
-                .buttonStyle(.plain)
-                .disabled(isImmutable)
-            }
-            
             // Drag handle icon - only show if not in completed section
             if isInCompletedSection {
                 // Preserve spacing where drag handle would be
@@ -63,6 +48,21 @@ struct ChecklistRowView: View {
                                 dragOffset = 0
                             }
                     )
+            }
+            
+            // Checkbox (only for non-template trips)
+            if showCheckbox {
+                Button(action: {
+                    if !isImmutable {
+                        onCheckToggle()
+                    }
+                }) {
+                    Image(systemName: item.isCompleted ? "checkmark.square.fill" : "square")
+                        .foregroundColor(isImmutable ? .secondary.opacity(0.5) : .primary)
+                        .font(.system(size: 20))
+                }
+                .buttonStyle(.plain)
+                .disabled(isImmutable)
             }
             
             // Main content area

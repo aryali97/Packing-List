@@ -71,7 +71,7 @@ struct ChecklistRowView: View {
                     .focused($isEditing)
                     .disabled(isImmutable || isInCompletedSection)
                     .strikethrough(item.isCompleted && isInCompletedSection)
-                    .opacity((item.isCompleted && isInCompletedSection) ? 0.6 : 1.0)
+                    .opacity(isInCompletedSection ? 0.6 : 1.0)
                 
                 Spacer()
                 

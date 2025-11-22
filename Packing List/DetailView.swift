@@ -25,9 +25,24 @@ struct DetailView: View {
         return visibleList(from: flat, collapsingID: draggingItemID).map { flat[$0] }
     }
     
-    // Items that are not completed
+    // Check if item and all its descendants are completed
+    private func isFullyCompleted(_ item: ChecklistItem) -> Bool {
+        // Item itself must be completed
+        guard item.isCompleted else { return false }
+        
+        // All children must be fully completed
+        for child in item.children {
+            if !isFullyCompleted(child) {
+                return false
+            }
+        }
+        
+        return true
+    }
+    
+    // Items that are not fully completed (item or any descendant unchecked)
     private var uncompletedItems: [FlatItem] {
-        flatItems.filter { !$0.item.isCompleted }
+        flatItems.filter { !isFullyCompleted($0.item) }
     }
     
     // Completed items with their parent chain preserved
@@ -35,10 +50,10 @@ struct DetailView: View {
         var result: [FlatItem] = []
         var includedIDs = Set<UUID>()
         
-        // First pass: collect all completed items
-        let completedItems = flatItems.filter { $0.item.isCompleted }
+        // First pass: collect all fully completed items
+        let fullyCompletedItems = flatItems.filter { isFullyCompleted($0.item) }
         
-        for completedItem in completedItems {
+        for completedItem in fullyCompletedItems {
             // Add ancestor chain
             var current: ChecklistItem? = completedItem.item
             var ancestorChain: [ChecklistItem] = []
@@ -121,7 +136,7 @@ struct DetailView: View {
                             depth: flat.depth,
                             showCheckbox: true,
                             isInCompletedSection: true,
-                            isImmutable: !flat.item.isCompleted,
+                            isImmutable: !isFullyCompleted(flat.item),
                             onCheckToggle: { toggleItemCompletion(item: flat.item) }
                         )
                     }
@@ -151,7 +166,17 @@ struct DetailView: View {
     // Toggle completion and handle children recursively
     private func toggleItemCompletion(item: ChecklistItem) {
         let newCompletionState = !item.isCompleted
-        setCompletionRecursively(item: item, isCompleted: newCompletionState)
+        
+        if newCompletionState {
+            // Checking: set this item and all children to completed
+            setCompletionRecursively(item: item, isCompleted: true)
+        } else {
+            // Unchecking: set this item and all children to uncompleted
+            setCompletionRecursively(item: item, isCompleted: false)
+            // Also uncheck all ancestors
+            uncheckAncestors(item: item)
+        }
+        
         try? modelContext.save()
     }
     
@@ -160,6 +185,15 @@ struct DetailView: View {
         item.isCompleted = isCompleted
         for child in item.children {
             setCompletionRecursively(item: child, isCompleted: isCompleted)
+        }
+    }
+    
+    // Uncheck all ancestors up the chain
+    private func uncheckAncestors(item: ChecklistItem) {
+        var current = item.parent
+        while let parent = current {
+            parent.isCompleted = false
+            current = parent.parent
         }
     }
     

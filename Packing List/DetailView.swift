@@ -28,6 +28,13 @@ struct DetailView: View {
         return indices.map { flat[$0] }
     }
     
+    private var visibleUncompletedItems: [FlatItem] {
+        let flat = flatItems
+        let conv = flat.map { ChecklistReorderer.FlatItem(id: $0.id, item: $0.item, depth: $0.depth) }
+        let indices = ChecklistReorderer.visibleIndices(flat: conv, collapsingID: draggingItemID)
+        return indices.map { flat[$0] }.filter { !isFullyCompleted($0.item) }
+    }
+    
     // Check if item and all its descendants are completed
     private func isFullyCompleted(_ item: ChecklistItem) -> Bool {
         // Item itself must be completed
@@ -110,7 +117,7 @@ struct DetailView: View {
                     .onMove(perform: moveItems)
                 } else {
                     // Trip view - show checkboxes and uncompleted items only
-                    ForEach(uncompletedItems) { flat in
+                    ForEach(visibleUncompletedItems) { flat in
                         ChecklistRowView(
                             item: flat.item,
                             depth: flat.depth,

@@ -16,6 +16,9 @@ struct ListView: View {
     }
     
     @State private var showCreateTripSheet = false
+    @State private var selectedListForNavigation: PackingList?
+    @State private var navigateToDetail = false
+    @State private var startEditingName = false
     
     let columns = [
         GridItem(.flexible()),
@@ -51,7 +54,14 @@ struct ListView: View {
                 }
             }
             .sheet(isPresented: $showCreateTripSheet) {
-                CreateTripView()
+                CreateTripView { newTrip in
+                    navigateToDetail(for: newTrip, shouldStartEditing: true)
+                }
+            }
+            .navigationDestination(isPresented: $navigateToDetail) {
+                if let selectedListForNavigation {
+                    DetailView(packingList: selectedListForNavigation, startEditingName: startEditingName)
+                }
             }
         }
     }
@@ -61,10 +71,17 @@ struct ListView: View {
             withAnimation {
                 let newItem = PackingList(name: "", isTemplate: true)
                 modelContext.insert(newItem)
+                navigateToDetail(for: newItem, shouldStartEditing: true)
             }
         } else {
             showCreateTripSheet = true
         }
+    }
+    
+    private func navigateToDetail(for list: PackingList, shouldStartEditing: Bool) {
+        selectedListForNavigation = list
+        startEditingName = shouldStartEditing
+        navigateToDetail = true
     }
 
 }

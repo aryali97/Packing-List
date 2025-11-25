@@ -3,8 +3,11 @@ import SwiftData
 
 struct DetailView: View {
     @Bindable var packingList: PackingList
+    var startEditingName: Bool = false
+
     @Environment(\.modelContext) private var modelContext
     @State private var draggingItemID: UUID?
+    @FocusState private var isNameFocused: Bool
     
     // Query all items to make the view reactive to deletions/changes
     @Query private var allItems: [ChecklistItem]
@@ -92,6 +95,7 @@ struct DetailView: View {
         List {
             Section("Details") {
                 TextField("Name", text: $packingList.name)
+                    .focused($isNameFocused)
                 if !packingList.isTemplate {
                     DatePicker("Trip Date", selection: Binding(get: {
                         packingList.tripDate ?? Date()
@@ -163,6 +167,12 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
         .animation(.easeInOut(duration: 0.25), value: draggingItemID)
+        .onAppear {
+            if startEditingName {
+                // Delay to allow view to appear before focusing
+                DispatchQueue.main.async { isNameFocused = true }
+            }
+        }
     }
     
     private func addItem() {

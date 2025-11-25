@@ -8,6 +8,8 @@ struct CreateTripView: View {
     @Query(filter: #Predicate<PackingList> { $0.isTemplate == true }, sort: \PackingList.name)
     private var templates: [PackingList]
     
+    var onCreate: ((PackingList) -> Void)? = nil
+    
     @State private var tripName: String = ""
     @State private var tripDate: Date = Date()
     @State private var selectedTemplates: Set<PackingList> = []
@@ -82,6 +84,7 @@ struct CreateTripView: View {
         }
         
         modelContext.insert(newTrip)
+        onCreate?(newTrip)
         dismiss()
     }
     

@@ -109,29 +109,6 @@ struct ChecklistRowView: View {
             }
             return false
         }
-        .contextMenu {
-            if !isImmutable && !isInCompletedSection {
-                Button(role: .destructive) {
-                    deleteSelf()
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                }
-                
-                Button {
-                    indentItem()
-                } label: {
-                    Label("Indent", systemImage: "increase.indent")
-                }
-                .disabled(!canIndent())
-                
-                Button {
-                    outdentItem()
-                } label: {
-                    Label("Outdent", systemImage: "decrease.indent")
-                }
-                .disabled(item.parent == nil)
-            }
-        }
     }
     
     private func deleteSelf() {

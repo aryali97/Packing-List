@@ -110,11 +110,12 @@ struct DetailView: View {
                             item: flat.item,
                             depth: flat.depth,
                             showCheckbox: false,
-                            onDragStart: { draggingItemID = flat.item.id },
-                            onDragEnd: { draggingItemID = nil }
+                            onDragStart: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = flat.item.id } },
+                            onDragEnd: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = nil } }
                         )
                     }
                     .onMove(perform: moveItems)
+                    .animation(.easeInOut(duration: 0.2), value: draggingItemID)
                 } else {
                     // Trip view - show checkboxes and uncompleted items only
                     ForEach(visibleUncompletedItems) { flat in
@@ -124,12 +125,13 @@ struct DetailView: View {
                             showCheckbox: true,
                             isInCompletedSection: false,
                             isImmutable: false,
-                            onDragStart: { draggingItemID = flat.item.id },
-                            onDragEnd: { draggingItemID = nil },
+                            onDragStart: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = flat.item.id } },
+                            onDragEnd: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = nil } },
                             onCheckToggle: { toggleItemCompletion(item: flat.item) }
                         )
                     }
                     .onMove(perform: moveItems)
+                    .animation(.easeInOut(duration: 0.2), value: draggingItemID)
                 }
                 
                 Button(action: addItem) {

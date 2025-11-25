@@ -161,9 +161,6 @@ struct DetailView: View {
         }
         .navigationTitle(packingList.name)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            EditButton()
-        }
         .animation(.easeInOut(duration: 0.25), value: draggingItemID)
     }
     
@@ -171,7 +168,7 @@ struct DetailView: View {
         let rootItem = packingList.rootItem
         
         let maxOrder = rootItem.children.map { $0.sortOrder }.max() ?? -1
-        let newItem = ChecklistItem(title: "New Item", sortOrder: maxOrder + 1)
+        let newItem = ChecklistItem(title: "", sortOrder: maxOrder + 1)
         newItem.parent = rootItem
         
         modelContext.insert(newItem)

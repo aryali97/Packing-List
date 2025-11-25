@@ -161,6 +161,23 @@ struct DetailView: View {
         }
         .navigationTitle(packingList.name)
         .navigationBarTitleDisplayMode(.inline)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 10)
+                .onChanged { value in
+                    
+                    let h = abs(value.translation.height)
+                    let w = abs(value.translation.width)
+                    let velocity = CGSize(
+                        width:  value.predictedEndLocation.x - value.location.x,
+                        height: value.predictedEndLocation.y - value.location.y
+                    )
+                    
+                    if h > w && h > 10 && velocity.height > 100 {
+                        dismissKeyboard()
+                    }
+                }
+                        
+        )
         .animation(.easeInOut(duration: 0.25), value: draggingItemID)
     }
     
@@ -226,5 +243,9 @@ struct DetailView: View {
         
         ChecklistReorderer.apply(flatOrder: moved, to: packingList.rootItem)
         draggingItemID = nil
+    }
+    
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }

@@ -113,9 +113,11 @@ struct DetailView: View {
                             onDragStart: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = flat.item.id } },
                             onDragEnd: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = nil } }
                         )
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                     .onMove(perform: moveItems)
-                    .animation(.easeInOut(duration: 0.2), value: draggingItemID)
+                    .animation(.easeInOut(duration: 0.25), value: visibleItems.map { $0.id })
+                    .animation(.easeInOut(duration: 0.25), value: draggingItemID)
                 } else {
                     // Trip view - show checkboxes and uncompleted items only
                     ForEach(visibleUncompletedItems) { flat in
@@ -126,12 +128,14 @@ struct DetailView: View {
                             isInCompletedSection: false,
                             isImmutable: false,
                             onDragStart: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = flat.item.id } },
-                            onDragEnd: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = nil } },
+                            onDragEnd: { withAnimation(.easeInOut(duration: 0.25).delay(0.05)) { draggingItemID = nil } },
                             onCheckToggle: { toggleItemCompletion(item: flat.item) }
                         )
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                     .onMove(perform: moveItems)
-                    .animation(.easeInOut(duration: 0.2), value: draggingItemID)
+                    .animation(.easeInOut(duration: 0.25), value: visibleUncompletedItems.map { $0.id })
+                    .animation(.easeInOut(duration: 0.25), value: draggingItemID)
                 }
                 
                 Button(action: addItem) {
@@ -160,6 +164,7 @@ struct DetailView: View {
         .toolbar {
             EditButton()
         }
+        .animation(.easeInOut(duration: 0.25), value: draggingItemID)
     }
     
     private func addItem() {

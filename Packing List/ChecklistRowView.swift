@@ -97,6 +97,7 @@ struct ChecklistRowView: View {
         .animation(.interactiveSpring(response: 0.2, dampingFraction: 0.85), value: dragOffset)
         .contentShape(Rectangle())
         .onDrag {
+            isEditing = false
             if !isInCompletedSection {
                 onDragStart()
                 return NSItemProvider(object: NSString(string: item.id.uuidString))

@@ -8,6 +8,8 @@ struct DetailView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var draggingItemID: UUID?
     @FocusState private var isNameFocused: Bool
+    @FocusState private var focusedItemID: UUID?
+    @State private var pendingFocusID: UUID?
     
     // Query all items to make the view reactive to deletions/changes
     @Query private var allItems: [ChecklistItem]
@@ -36,6 +38,10 @@ struct DetailView: View {
         let conv = flat.map { ChecklistReorderer.FlatItem(id: $0.id, item: $0.item, depth: $0.depth) }
         let indices = ChecklistReorderer.visibleIndices(flat: conv, collapsingID: draggingItemID)
         return indices.map { flat[$0] }.filter { !isFullyCompleted($0.item) }
+    }
+    
+    private var editableItems: [FlatItem] {
+        packingList.isTemplate ? visibleItems : visibleUncompletedItems
     }
     
     // Check if item and all its descendants are completed
@@ -114,8 +120,12 @@ struct DetailView: View {
                             item: flat.item,
                             depth: flat.depth,
                             showCheckbox: false,
+                            focusBinding: $focusedItemID,
+                            pendingFocusID: pendingFocusID,
+                            consumePendingFocus: { pendingFocusID = nil },
                             onDragStart: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = flat.item.id } },
-                            onDragEnd: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = nil } }
+                            onDragEnd: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = nil } },
+                            onSubmit: { handleSubmit(for: flat.item) }
                         )
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
@@ -131,9 +141,13 @@ struct DetailView: View {
                             showCheckbox: true,
                             isInCompletedSection: false,
                             isImmutable: false,
+                            focusBinding: $focusedItemID,
+                            pendingFocusID: pendingFocusID,
+                            consumePendingFocus: { pendingFocusID = nil },
                             onDragStart: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = flat.item.id } },
                             onDragEnd: { withAnimation(.easeInOut(duration: 0.25).delay(0.05)) { draggingItemID = nil } },
-                            onCheckToggle: { toggleItemCompletion(item: flat.item) }
+                            onCheckToggle: { toggleItemCompletion(item: flat.item) },
+                            onSubmit: { handleSubmit(for: flat.item) }
                         )
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
@@ -157,6 +171,9 @@ struct DetailView: View {
                             showCheckbox: true,
                             isInCompletedSection: true,
                             isImmutable: !isFullyCompleted(flat.item),
+                            focusBinding: $focusedItemID,
+                            pendingFocusID: pendingFocusID,
+                            consumePendingFocus: { pendingFocusID = nil },
                             onCheckToggle: { toggleItemCompletion(item: flat.item) }
                         )
                     }
@@ -175,6 +192,33 @@ struct DetailView: View {
         }
     }
     
+    private func handleSubmit(for item: ChecklistItem) {
+        let newItem = insertItem(after: item)
+        pendingFocusID = newItem.id
+    }
+    
+    private func insertItem(after item: ChecklistItem) -> ChecklistItem {
+        let parent = item.parent ?? packingList.rootItem
+        let siblings = parent.children.sorted(by: { $0.sortOrder < $1.sortOrder })
+        let newItem = ChecklistItem(title: "", sortOrder: 0)
+        newItem.parent = parent
+        
+        if let index = siblings.firstIndex(where: { $0.id == item.id }) {
+            let insertionOrder = siblings[index].sortOrder + 1
+            for sibling in siblings where sibling.sortOrder >= insertionOrder {
+                sibling.sortOrder += 1
+            }
+            newItem.sortOrder = insertionOrder
+        } else {
+            newItem.sortOrder = (siblings.last?.sortOrder ?? -1) + 1
+        }
+        
+        modelContext.insert(newItem)
+        rebalanceSortOrders(for: parent)
+        try? modelContext.save()
+        return newItem
+    }
+    
     private func addItem() {
         let rootItem = packingList.rootItem
         
@@ -186,6 +230,7 @@ struct DetailView: View {
         
         // Force save to update the relationship and trigger UI refresh
         try? modelContext.save()
+        pendingFocusID = newItem.id
     }
     
     // Toggle completion and handle children recursively
@@ -219,6 +264,13 @@ struct DetailView: View {
         while let parent = current {
             parent.isCompleted = false
             current = parent.parent
+        }
+    }
+    
+    private func rebalanceSortOrders(for parent: ChecklistItem) {
+        let sortedChildren = parent.children.sorted(by: { $0.sortOrder < $1.sortOrder })
+        for (index, child) in sortedChildren.enumerated() {
+            child.sortOrder = index
         }
     }
     

@@ -7,14 +7,17 @@ struct ChecklistRowView: View {
     var showCheckbox: Bool = false
     var isInCompletedSection: Bool = false
     var isImmutable: Bool = false
+    var focusBinding: FocusState<UUID?>.Binding?
+    var pendingFocusID: UUID?
+    var consumePendingFocus: () -> Void = {}
     var onDragStart: () -> Void = {}
     var onDragEnd: () -> Void = {}
     var onCheckToggle: () -> Void = {}
+    var onSubmit: () -> Void = {}
     @Environment(\.modelContext) private var modelContext
     @Environment(\.editMode) private var editMode
     @State private var dragOffset: CGFloat = 0
     @State private var hasNotifiedDragStart = false
-    @FocusState private var isEditing: Bool
     
     private enum Constants {
         static let dragThreshold: CGFloat = 25
@@ -24,10 +27,35 @@ struct ChecklistRowView: View {
         CGFloat(max(depth - 1, 0)) * 20
     }
     
+    private var isFocused: Bool {
+        focusBinding?.wrappedValue == item.id
+    }
+    
     private var shouldShowDeleteButton: Bool {
         let listIsInEditMode = editMode?.wrappedValue.isEditing ?? false
         let canShow = !isImmutable && !isInCompletedSection
-        return (isEditing || listIsInEditMode) && canShow
+        return (isFocused || listIsInEditMode) && canShow
+    }
+    
+    @ViewBuilder
+    private var titleField: some View {
+        let base = TextField("Item", text: $item.title, axis: .vertical)
+            .disabled(isImmutable || isInCompletedSection)
+            .strikethrough(item.isCompleted && isInCompletedSection)
+            .opacity(isInCompletedSection ? 0.6 : 1.0)
+            .submitLabel(.return)
+            .onChange(of: item.title) { newValue in
+                guard isFocused else { return }
+                guard newValue.contains("\n") else { return }
+                item.title = newValue.replacingOccurrences(of: "\n", with: "")
+                onSubmit()
+            }
+        
+        if let focusBinding {
+            base.focused(focusBinding, equals: item.id)
+        } else {
+            base
+        }
     }
     
     var body: some View {
@@ -73,11 +101,7 @@ struct ChecklistRowView: View {
             
             // Main content area
             HStack(spacing: 8) {
-                TextField("Item", text: $item.title)
-                    .focused($isEditing)
-                    .disabled(isImmutable || isInCompletedSection)
-                    .strikethrough(item.isCompleted && isInCompletedSection)
-                    .opacity(isInCompletedSection ? 0.6 : 1.0)
+                titleField
                 
                 Spacer()
                 
@@ -94,7 +118,7 @@ struct ChecklistRowView: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 if !isImmutable && !isInCompletedSection {
-                    isEditing = true
+                    focusBinding?.wrappedValue = item.id
                 }
             }
         }
@@ -103,7 +127,7 @@ struct ChecklistRowView: View {
         .animation(.interactiveSpring(response: 0.2, dampingFraction: 0.85), value: dragOffset)
         .contentShape(Rectangle())
         .onDrag {
-            isEditing = false
+            focusBinding?.wrappedValue = nil
             if !isInCompletedSection {
                 onDragStart()
                 return NSItemProvider(object: NSString(string: item.id.uuidString))
@@ -115,6 +139,12 @@ struct ChecklistRowView: View {
                 onDragEnd()
             }
             return false
+        }
+        .onAppear {
+            if pendingFocusID == item.id {
+                focusBinding?.wrappedValue = item.id
+                consumePendingFocus()
+            }
         }
     }
     

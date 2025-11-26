@@ -9,7 +9,6 @@ struct DetailView: View {
     @State private var draggingItemID: UUID?
     @FocusState private var isNameFocused: Bool
     @FocusState private var focusedItemID: UUID?
-    @State private var pendingFocusID: UUID?
     
     // Query all items to make the view reactive to deletions/changes
     @Query private var allItems: [ChecklistItem]
@@ -121,8 +120,6 @@ struct DetailView: View {
                             depth: flat.depth,
                             showCheckbox: false,
                             focusBinding: $focusedItemID,
-                            pendingFocusID: pendingFocusID,
-                            consumePendingFocus: { pendingFocusID = nil },
                             onDragStart: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = flat.item.id } },
                             onDragEnd: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = nil } },
                             onSubmit: { handleSubmit(for: flat.item) }
@@ -142,8 +139,6 @@ struct DetailView: View {
                             isInCompletedSection: false,
                             isImmutable: false,
                             focusBinding: $focusedItemID,
-                            pendingFocusID: pendingFocusID,
-                            consumePendingFocus: { pendingFocusID = nil },
                             onDragStart: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = flat.item.id } },
                             onDragEnd: { withAnimation(.easeInOut(duration: 0.25).delay(0.05)) { draggingItemID = nil } },
                             onCheckToggle: { toggleItemCompletion(item: flat.item) },
@@ -172,8 +167,6 @@ struct DetailView: View {
                             isInCompletedSection: true,
                             isImmutable: !isFullyCompleted(flat.item),
                             focusBinding: $focusedItemID,
-                            pendingFocusID: pendingFocusID,
-                            consumePendingFocus: { pendingFocusID = nil },
                             onCheckToggle: { toggleItemCompletion(item: flat.item) }
                         )
                     }
@@ -194,7 +187,7 @@ struct DetailView: View {
     
     private func handleSubmit(for item: ChecklistItem) {
         let newItem = insertItem(after: item)
-        pendingFocusID = newItem.id
+        focusedItemID = newItem.id
     }
     
     private func insertItem(after item: ChecklistItem) -> ChecklistItem {
@@ -230,7 +223,7 @@ struct DetailView: View {
         
         // Force save to update the relationship and trigger UI refresh
         try? modelContext.save()
-        pendingFocusID = newItem.id
+        focusedItemID = newItem.id
     }
     
     // Toggle completion and handle children recursively

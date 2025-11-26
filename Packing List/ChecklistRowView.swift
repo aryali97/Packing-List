@@ -8,8 +8,6 @@ struct ChecklistRowView: View {
     var isInCompletedSection: Bool = false
     var isImmutable: Bool = false
     var focusBinding: FocusState<UUID?>.Binding?
-    var pendingFocusID: UUID?
-    var consumePendingFocus: () -> Void = {}
     var onDragStart: () -> Void = {}
     var onDragEnd: () -> Void = {}
     var onCheckToggle: () -> Void = {}
@@ -140,17 +138,43 @@ struct ChecklistRowView: View {
             }
             return false
         }
-        .onAppear {
-            if pendingFocusID == item.id {
-                focusBinding?.wrappedValue = item.id
-                consumePendingFocus()
-            }
-        }
     }
     
     private func deleteSelf() {
+        // Move focus to the previous visible row (preorder) before deleting this row.
+        if let focusBinding, let previousID = previousVisibleRowID() {
+            focusBinding.wrappedValue = previousID
+        }
+        
         modelContext.delete(item)
         try? modelContext.save()
+    }
+
+    /// Finds the previous visible row in preorder traversal, matching the list display order.
+    private func previousVisibleRowID() -> UUID? {
+        guard let parent = item.parent else { return nil }
+        
+        let siblings = parent.children.sorted(by: { $0.sortOrder < $1.sortOrder })
+        if let index = siblings.firstIndex(where: { $0.id == item.id }), index > 0 {
+            let previousSibling = siblings[index - 1]
+            return deepestDescendantID(of: previousSibling)
+        }
+        
+        // No previous sibling: fall back to parent, unless the parent is the hidden root.
+        if parent.parent != nil {
+            return parent.id
+        }
+        
+        return nil
+    }
+
+    /// Returns the deepest descendant (last in preorder) for a given item, or the item itself if it has no children.
+    private func deepestDescendantID(of node: ChecklistItem) -> UUID {
+        var current = node
+        while let lastChild = current.children.sorted(by: { $0.sortOrder < $1.sortOrder }).last {
+            current = lastChild
+        }
+        return current.id
     }
     
     // MARK: - Indent/Outdent Logic

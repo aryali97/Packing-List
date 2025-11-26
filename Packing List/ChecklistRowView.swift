@@ -24,6 +24,12 @@ struct ChecklistRowView: View {
         CGFloat(max(depth - 1, 0)) * 20
     }
     
+    private var shouldShowDeleteButton: Bool {
+        let listIsInEditMode = editMode?.wrappedValue.isEditing ?? false
+        let canShow = !isImmutable && !isInCompletedSection
+        return (isEditing || listIsInEditMode) && canShow
+    }
+    
     var body: some View {
         HStack(spacing: 12) {
             // Drag handle icon - only show if not in completed section
@@ -75,7 +81,7 @@ struct ChecklistRowView: View {
                 
                 Spacer()
                 
-                if isEditing && !isImmutable && !isInCompletedSection {
+                if shouldShowDeleteButton {
                     Button(action: deleteSelf) {
                         Image(systemName: "xmark")
                             .foregroundColor(.secondary)

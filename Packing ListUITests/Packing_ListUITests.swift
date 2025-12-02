@@ -7,6 +7,7 @@
 
 import XCTest
 
+// swiftlint:disable:next type_name
 final class Packing_ListUITests: XCTestCase {
 
     override func setUpWithError() throws {

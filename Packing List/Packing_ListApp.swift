@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct Packing_ListApp: App {
+struct Packing_ListApp: App {  // swiftlint:disable:this type_name
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             PackingList.self,

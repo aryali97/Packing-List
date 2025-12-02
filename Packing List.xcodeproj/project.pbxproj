@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8568ACF72EDEB13A00561F36 /* packing_list.icon in Resources */ = {isa = PBXBuildFile; fileRef = 8568ACF62EDEB13A00561F36 /* packing_list.icon */; };
 		85B8608B2ECFF6E4003D93BC /* Packing_ListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B8608A2ECFF6E4003D93BC /* Packing_ListTests.swift */; };
 		85B860952ECFF6E4003D93BC /* Packing_ListUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860942ECFF6E4003D93BC /* Packing_ListUITests.swift */; };
 		85B860972ECFF6E4003D93BC /* Packing_ListUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860962ECFF6E4003D93BC /* Packing_ListUITestsLaunchTests.swift */; };
@@ -43,6 +44,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8568ACF62EDEB13A00561F36 /* packing_list.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = packing_list.icon; sourceTree = "<group>"; };
 		85B860762ECFF6E3003D93BC /* Packing List.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Packing List.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		85B860862ECFF6E4003D93BC /* Packing ListTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Packing ListTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		85B8608A2ECFF6E4003D93BC /* Packing_ListTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Packing_ListTests.swift; sourceTree = "<group>"; };
@@ -140,6 +142,7 @@
 			children = (
 				85B860A42ECFFF6A003D93BC /* Preview Content */,
 				85B860A52ECFFF6A003D93BC /* Assets.xcassets */,
+				8568ACF62EDEB13A00561F36 /* packing_list.icon */,
 				85B860A62ECFFF6A003D93BC /* ChecklistRowView.swift */,
 				85B860A72ECFFF6A003D93BC /* ContentView.swift */,
 				85B860A82ECFFF6A003D93BC /* CreateTripView.swift */,
@@ -219,7 +222,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1540;
-				LastUpgradeCheck = 1540;
+				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					85B860752ECFF6E3003D93BC = {
 						CreatedOnToolsVersion = 15.4;
@@ -261,6 +264,7 @@
 			files = (
 				85B860B02ECFFF6A003D93BC /* Preview Assets.xcassets in Resources */,
 				85B860B12ECFFF6A003D93BC /* Assets.xcassets in Resources */,
+				8568ACF72EDEB13A00561F36 /* packing_list.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -389,6 +393,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 389W483GVX;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -412,6 +417,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -452,6 +458,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 389W483GVX;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -468,6 +475,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -476,12 +484,11 @@
 		85B8609B2ECFF6E4003D93BC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = packing_list;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Packing List/Preview Content\"";
-				DEVELOPMENT_TEAM = 389W483GVX;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -506,12 +513,11 @@
 		85B8609C2ECFF6E4003D93BC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = packing_list;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Packing List/Preview Content\"";
-				DEVELOPMENT_TEAM = 389W483GVX;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -536,11 +542,9 @@
 		85B8609E2ECFF6E4003D93BC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 389W483GVX;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
 				MARKETING_VERSION = 1.0;
@@ -556,11 +560,9 @@
 		85B8609F2ECFF6E4003D93BC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 389W483GVX;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
 				MARKETING_VERSION = 1.0;
@@ -576,10 +578,8 @@
 		85B860A12ECFF6E4003D93BC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 389W483GVX;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.aniryali.Packing-ListUITests";
@@ -594,10 +594,8 @@
 		85B860A22ECFF6E4003D93BC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 389W483GVX;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.aniryali.Packing-ListUITests";

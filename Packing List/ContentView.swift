@@ -8,7 +8,7 @@ struct ContentView: View {
                 .tabItem {
                     Label("Trips", systemImage: "airplane")
                 }
-            
+
             ListView(isTemplate: true)
                 .tabItem {
                     Label("Templates", systemImage: "list.bullet.clipboard")

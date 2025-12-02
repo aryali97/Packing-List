@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PackingListCard: View {
     let packingList: PackingList
-    
+
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
@@ -11,9 +11,9 @@ struct PackingListCard: View {
                     .lineLimit(2)
                 Spacer()
             }
-            
+
             Spacer()
-            
+
             if let date = packingList.tripDate {
                 Text(date, style: .date)
                     .font(.caption)
@@ -23,7 +23,7 @@ struct PackingListCard: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
+
             HStack {
                 Image(systemName: "checklist")
                 Text("\(packingList.rootItem.children.count) items")
@@ -66,7 +66,7 @@ extension Color {
             .sRGB,
             red: Double(r) / 255,
             green: Double(g) / 255,
-            blue:  Double(b) / 255,
+            blue: Double(b) / 255,
             opacity: Double(a) / 255
         )
     }

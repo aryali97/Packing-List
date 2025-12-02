@@ -3,10 +3,10 @@ import SwiftData
 
 struct ListView: View {
     var isTemplate: Bool
-    
+
     @Query private var packingLists: [PackingList]
     @Environment(\.modelContext) private var modelContext
-    
+
     init(isTemplate: Bool) {
         self.isTemplate = isTemplate
         // Filter the query based on whether we are showing templates or trips
@@ -14,17 +14,17 @@ struct ListView: View {
             list.isTemplate == isTemplate
         }, sort: \PackingList.name)
     }
-    
+
     @State private var showCreateTripSheet = false
     @State private var selectedListForNavigation: PackingList?
     @State private var navigateToDetail = false
     @State private var startEditingName = false
-    
+
     let columns = [
         GridItem(.flexible()),
         GridItem(.flexible())
     ]
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -77,7 +77,7 @@ struct ListView: View {
             showCreateTripSheet = true
         }
     }
-    
+
     private func navigateToDetail(for list: PackingList, shouldStartEditing: Bool) {
         selectedListForNavigation = list
         startEditingName = shouldStartEditing

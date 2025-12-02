@@ -6,7 +6,7 @@ struct Packing_ListApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             PackingList.self,
-            ChecklistItem.self,
+            ChecklistItem.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

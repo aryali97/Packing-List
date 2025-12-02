@@ -1,12 +1,12 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @main
-struct Packing_ListApp: App {  // swiftlint:disable:this type_name
+struct Packing_ListApp: App { // swiftlint:disable:this type_name
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             PackingList.self,
-            ChecklistItem.self
+            ChecklistItem.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -21,6 +21,6 @@ struct Packing_ListApp: App {  // swiftlint:disable:this type_name
         WindowGroup {
             ContentView()
         }
-        .modelContainer(sharedModelContainer)
+        .modelContainer(self.sharedModelContainer)
     }
 }

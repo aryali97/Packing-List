@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct DetailView: View {
     @Bindable var packingList: PackingList
@@ -21,26 +21,29 @@ struct DetailView: View {
     }
 
     private var flatItems: [FlatItem] {
-        ChecklistReorderer.flatten(root: packingList.rootItem).map {
+        ChecklistReorderer.flatten(root: self.packingList.rootItem).map {
             FlatItem(id: $0.id, item: $0.item, depth: $0.depth, parentID: nil)
         }
     }
 
     private var visibleItems: [FlatItem] {
-        let flat = flatItems
-        let indices = ChecklistReorderer.visibleIndices(flat: flat.map { ChecklistReorderer.FlatItem(id: $0.id, item: $0.item, depth: $0.depth) }, collapsingID: draggingItemID)
+        let flat = self.flatItems
+        let indices = ChecklistReorderer.visibleIndices(
+            flat: flat.map { ChecklistReorderer.FlatItem(id: $0.id, item: $0.item, depth: $0.depth) },
+            collapsingID: self.draggingItemID
+        )
         return indices.map { flat[$0] }
     }
 
     private var visibleUncompletedItems: [FlatItem] {
-        let flat = flatItems
+        let flat = self.flatItems
         let conv = flat.map { ChecklistReorderer.FlatItem(id: $0.id, item: $0.item, depth: $0.depth) }
-        let indices = ChecklistReorderer.visibleIndices(flat: conv, collapsingID: draggingItemID)
-        return indices.map { flat[$0] }.filter { !isFullyCompleted($0.item) }
+        let indices = ChecklistReorderer.visibleIndices(flat: conv, collapsingID: self.draggingItemID)
+        return indices.map { flat[$0] }.filter { !self.isFullyCompleted($0.item) }
     }
 
     private var editableItems: [FlatItem] {
-        packingList.isTemplate ? visibleItems : visibleUncompletedItems
+        self.packingList.isTemplate ? self.visibleItems : self.visibleUncompletedItems
     }
 
     // Check if item and all its descendants are completed
@@ -50,7 +53,7 @@ struct DetailView: View {
 
         // All children must be fully completed
         for child in item.children {
-            if !isFullyCompleted(child) {
+            if !self.isFullyCompleted(child) {
                 return false
             }
         }
@@ -60,7 +63,7 @@ struct DetailView: View {
 
     // Items that are not fully completed (item or any descendant unchecked)
     private var uncompletedItems: [FlatItem] {
-        flatItems.filter { !isFullyCompleted($0.item) }
+        self.flatItems.filter { !self.isFullyCompleted($0.item) }
     }
 
     // Completed items with their parent chain preserved
@@ -69,7 +72,7 @@ struct DetailView: View {
         var includedIDs = Set<UUID>()
 
         // First pass: collect all fully completed items
-        let fullyCompletedItems = flatItems.filter { isFullyCompleted($0.item) }
+        let fullyCompletedItems = self.flatItems.filter { self.isFullyCompleted($0.item) }
 
         for completedItem in fullyCompletedItems {
             // Add ancestor chain
@@ -99,99 +102,105 @@ struct DetailView: View {
     var body: some View {
         List {
             Section("Details") {
-                TextField("Name", text: $packingList.name)
-                    .focused($isNameFocused)
-                if !packingList.isTemplate {
+                TextField("Name", text: self.$packingList.name)
+                    .focused(self.$isNameFocused)
+                if !self.packingList.isTemplate {
                     DatePicker("Trip Date", selection: Binding(get: {
-                        packingList.tripDate ?? Date()
+                        self.packingList.tripDate ?? Date()
                     }, set: {
-                        packingList.tripDate = $0
+                        self.packingList.tripDate = $0
                     }), displayedComponents: .date)
                 }
             }
 
             // Main items section
             Section("Items") {
-                if packingList.isTemplate {
+                if self.packingList.isTemplate {
                     // Template view - no checkboxes
-                    ForEach(visibleItems) { flat in
+                    ForEach(self.visibleItems) { flat in
                         ChecklistRowView(
                             item: flat.item,
                             depth: flat.depth,
                             showCheckbox: false,
-                            focusBinding: $focusedItemID,
-                            onDragStart: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = flat.item.id } },
-                            onDragEnd: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = nil } },
-                            onSubmit: { handleSubmit(for: flat.item) }
+                            focusBinding: self.$focusedItemID,
+                            onDragStart: {
+                                withAnimation(.easeInOut(duration: 0.2)) { self.draggingItemID = flat.item.id }
+                            },
+                            onDragEnd: { withAnimation(.easeInOut(duration: 0.2)) { self.draggingItemID = nil } },
+                            onSubmit: { self.handleSubmit(for: flat.item) }
                         )
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
-                    .onMove(perform: moveItems)
-                    .animation(.easeInOut(duration: 0.25), value: visibleItems.map { $0.id })
-                    .animation(.easeInOut(duration: 0.25), value: draggingItemID)
+                    .onMove(perform: self.moveItems)
+                    .animation(.easeInOut(duration: 0.25), value: self.visibleItems.map(\.id))
+                    .animation(.easeInOut(duration: 0.25), value: self.draggingItemID)
                 } else {
                     // Trip view - show checkboxes and uncompleted items only
-                    ForEach(visibleUncompletedItems) { flat in
+                    ForEach(self.visibleUncompletedItems) { flat in
                         ChecklistRowView(
                             item: flat.item,
                             depth: flat.depth,
                             showCheckbox: true,
                             isInCompletedSection: false,
                             isImmutable: false,
-                            focusBinding: $focusedItemID,
-                            onDragStart: { withAnimation(.easeInOut(duration: 0.2)) { draggingItemID = flat.item.id } },
-                            onDragEnd: { withAnimation(.easeInOut(duration: 0.25).delay(0.05)) { draggingItemID = nil } },
-                            onCheckToggle: { toggleItemCompletion(item: flat.item) },
-                            onSubmit: { handleSubmit(for: flat.item) }
+                            focusBinding: self.$focusedItemID,
+                            onDragStart: {
+                                withAnimation(.easeInOut(duration: 0.2)) { self.draggingItemID = flat.item.id }
+                            },
+                            onDragEnd: {
+                                withAnimation(.easeInOut(duration: 0.25).delay(0.05)) { self.draggingItemID = nil }
+                            },
+                            onCheckToggle: { self.toggleItemCompletion(item: flat.item) },
+                            onSubmit: { self.handleSubmit(for: flat.item) }
                         )
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
-                    .onMove(perform: moveItems)
-                    .animation(.easeInOut(duration: 0.25), value: visibleUncompletedItems.map { $0.id })
-                    .animation(.easeInOut(duration: 0.25), value: draggingItemID)
+                    .onMove(perform: self.moveItems)
+                    .animation(.easeInOut(duration: 0.25), value: self.visibleUncompletedItems.map(\.id))
+                    .animation(.easeInOut(duration: 0.25), value: self.draggingItemID)
                 }
 
-                Button(action: addItem) {
+                Button(action: self.addItem) {
                     Label("Add Item", systemImage: "plus")
                 }
             }
 
             // Completed section (only for trips, not templates)
-            if !packingList.isTemplate && !completedItemsWithParents.isEmpty {
+            if !self.packingList.isTemplate, !self.completedItemsWithParents.isEmpty {
                 Section("Completed") {
-                    ForEach(completedItemsWithParents) { flat in
+                    ForEach(self.completedItemsWithParents) { flat in
                         ChecklistRowView(
                             item: flat.item,
                             depth: flat.depth,
                             showCheckbox: true,
                             isInCompletedSection: true,
-                            isImmutable: !isFullyCompleted(flat.item),
-                            focusBinding: $focusedItemID,
-                            onCheckToggle: { toggleItemCompletion(item: flat.item) }
+                            isImmutable: !self.isFullyCompleted(flat.item),
+                            focusBinding: self.$focusedItemID,
+                            onCheckToggle: { self.toggleItemCompletion(item: flat.item) }
                         )
                     }
                 }
             }
         }
-        .navigationTitle(packingList.name)
+        .navigationTitle(self.packingList.name)
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
-        .animation(.easeInOut(duration: 0.25), value: draggingItemID)
+        .animation(.easeInOut(duration: 0.25), value: self.draggingItemID)
         .onAppear {
-            if startEditingName {
+            if self.startEditingName {
                 // Delay to allow view to appear before focusing
-                DispatchQueue.main.async { isNameFocused = true }
+                DispatchQueue.main.async { self.isNameFocused = true }
             }
         }
     }
 
     private func handleSubmit(for item: ChecklistItem) {
-        let newItem = insertItem(after: item)
-        focusedItemID = newItem.id
+        let newItem = self.insertItem(after: item)
+        self.focusedItemID = newItem.id
     }
 
     private func insertItem(after item: ChecklistItem) -> ChecklistItem {
-        let parent = item.parent ?? packingList.rootItem
+        let parent = item.parent ?? self.packingList.rootItem
         let siblings = parent.children.sorted(by: { $0.sortOrder < $1.sortOrder })
         let newItem = ChecklistItem(title: "", sortOrder: 0)
         newItem.parent = parent
@@ -206,24 +215,24 @@ struct DetailView: View {
             newItem.sortOrder = (siblings.last?.sortOrder ?? -1) + 1
         }
 
-        modelContext.insert(newItem)
-        rebalanceSortOrders(for: parent)
-        try? modelContext.save()
+        self.modelContext.insert(newItem)
+        self.rebalanceSortOrders(for: parent)
+        try? self.modelContext.save()
         return newItem
     }
 
     private func addItem() {
-        let rootItem = packingList.rootItem
+        let rootItem = self.packingList.rootItem
 
-        let maxOrder = rootItem.children.map { $0.sortOrder }.max() ?? -1
+        let maxOrder = rootItem.children.map(\.sortOrder).max() ?? -1
         let newItem = ChecklistItem(title: "", sortOrder: maxOrder + 1)
         newItem.parent = rootItem
 
-        modelContext.insert(newItem)
+        self.modelContext.insert(newItem)
 
         // Force save to update the relationship and trigger UI refresh
-        try? modelContext.save()
-        focusedItemID = newItem.id
+        try? self.modelContext.save()
+        self.focusedItemID = newItem.id
     }
 
     // Toggle completion and handle children recursively
@@ -232,22 +241,22 @@ struct DetailView: View {
 
         if newCompletionState {
             // Checking: set this item and all children to completed
-            setCompletionRecursively(item: item, isCompleted: true)
+            self.setCompletionRecursively(item: item, isCompleted: true)
         } else {
             // Unchecking: set this item and all children to uncompleted
-            setCompletionRecursively(item: item, isCompleted: false)
+            self.setCompletionRecursively(item: item, isCompleted: false)
             // Also uncheck all ancestors
-            uncheckAncestors(item: item)
+            self.uncheckAncestors(item: item)
         }
 
-        try? modelContext.save()
+        try? self.modelContext.save()
     }
 
     // Recursively set completion state for item and all children
     private func setCompletionRecursively(item: ChecklistItem, isCompleted: Bool) {
         item.isCompleted = isCompleted
         for child in item.children {
-            setCompletionRecursively(item: child, isCompleted: isCompleted)
+            self.setCompletionRecursively(item: child, isCompleted: isCompleted)
         }
     }
 
@@ -270,18 +279,18 @@ struct DetailView: View {
     private func moveItems(from source: IndexSet, to destination: Int) {
         guard let sourceVisibleIndex = source.first else { return }
 
-        let flat = flatItems
+        let flat = self.flatItems
         let converted = flat.map { ChecklistReorderer.FlatItem(id: $0.id, item: $0.item, depth: $0.depth) }
 
         let moved = ChecklistReorderer.move(
             flat: converted,
             sourceVisible: sourceVisibleIndex,
             destinationVisible: destination,
-            collapsingID: draggingItemID
+            collapsingID: self.draggingItemID
         )
 
-        ChecklistReorderer.apply(flatOrder: moved, to: packingList.rootItem)
-        draggingItemID = nil
+        ChecklistReorderer.apply(flatOrder: moved, to: self.packingList.rootItem)
+        self.draggingItemID = nil
     }
 
     private func dismissKeyboard() {

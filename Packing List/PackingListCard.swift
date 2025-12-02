@@ -6,7 +6,7 @@ struct PackingListCard: View {
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
-                Text(packingList.name)
+                Text(self.packingList.name)
                     .font(.headline)
                     .lineLimit(2)
                 Spacer()
@@ -18,7 +18,7 @@ struct PackingListCard: View {
                 Text(date, style: .date)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-            } else if packingList.isTemplate {
+            } else if self.packingList.isTemplate {
                 Text("Template")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -26,20 +26,20 @@ struct PackingListCard: View {
 
             HStack {
                 Image(systemName: "checklist")
-                Text("\(packingList.rootItem.children.count) items")
+                Text("\(self.packingList.rootItem.children.count) items")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
         }
         .padding()
         .frame(height: 120)
-        .background(Color(hex: packingList.colorHex).opacity(0.1))
+        .background(Color(hex: self.packingList.colorHex).opacity(0.1))
         .background(.background)
         .cornerRadius(12)
         .shadow(radius: 2)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(hex: packingList.colorHex), lineWidth: 1)
+                .stroke(Color(hex: self.packingList.colorHex), lineWidth: 1)
         )
     }
 }

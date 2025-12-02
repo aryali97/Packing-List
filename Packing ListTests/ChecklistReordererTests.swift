@@ -1,16 +1,15 @@
-import XCTest
 @testable import Packing_List
+import XCTest
 
 @MainActor
 final class ChecklistReordererTests: XCTestCase {
-
     func testMoveBlockForwardKeepsChildrenTogether() {
-        let root = makeRoot([
+        let root = self.makeRoot([
             ("A", 1),
             ("B", 1),
             ("C", 2),
             ("D", 1),
-            ("E", 1)
+            ("E", 1),
         ])
 
         var flat = ChecklistReorderer.flatten(root: root)
@@ -22,21 +21,21 @@ final class ChecklistReordererTests: XCTestCase {
         )
         ChecklistReorderer.apply(flatOrder: flat, to: root)
 
-        XCTAssertEqual(namesAndDepths(root), [
+        XCTAssertEqual(self.namesAndDepths(root), [
             NameDepth(name: "A", depth: 1),
             NameDepth(name: "D", depth: 1),
             NameDepth(name: "B", depth: 1),
             NameDepth(name: "C", depth: 2),
-            NameDepth(name: "E", depth: 1)
+            NameDepth(name: "E", depth: 1),
         ])
     }
 
     func testMoveBlockBackwardKeepsChildrenTogether() {
-        let root = makeRoot([
+        let root = self.makeRoot([
             ("A", 1),
             ("B", 1),
             ("C", 2),
-            ("D", 1)
+            ("D", 1),
         ])
 
         var flat = ChecklistReorderer.flatten(root: root)
@@ -48,19 +47,19 @@ final class ChecklistReordererTests: XCTestCase {
         )
         ChecklistReorderer.apply(flatOrder: flat, to: root)
 
-        XCTAssertEqual(namesAndDepths(root), [
+        XCTAssertEqual(self.namesAndDepths(root), [
             NameDepth(name: "B", depth: 1),
             NameDepth(name: "C", depth: 2),
             NameDepth(name: "D", depth: 1),
-            NameDepth(name: "A", depth: 1)
+            NameDepth(name: "A", depth: 1),
         ])
     }
 
     func testMoveWithinSameParentKeepsDepth() {
-        let root = makeRoot([
+        let root = self.makeRoot([
             ("A", 1),
             ("B", 1),
-            ("C", 1)
+            ("C", 1),
         ])
 
         var flat = ChecklistReorderer.flatten(root: root)
@@ -72,10 +71,10 @@ final class ChecklistReordererTests: XCTestCase {
         )
         ChecklistReorderer.apply(flatOrder: flat, to: root)
 
-        XCTAssertEqual(namesAndDepths(root), [
+        XCTAssertEqual(self.namesAndDepths(root), [
             NameDepth(name: "A", depth: 1),
             NameDepth(name: "C", depth: 1),
-            NameDepth(name: "B", depth: 1)
+            NameDepth(name: "B", depth: 1),
         ])
     }
 
@@ -103,7 +102,8 @@ final class ChecklistReordererTests: XCTestCase {
         ChecklistReorderer.flatten(root: root).map { NameDepth(name: $0.item.title, depth: $0.depth) }
     }
 }
-    private struct NameDepth: Equatable {
-        let name: String
-        let depth: Int
-    }
+
+private struct NameDepth: Equatable {
+    let name: String
+    let depth: Int
+}

@@ -1,7 +1,7 @@
-import SwiftUI
-import SwiftData
-import UIKit
 import ObjectiveC.runtime
+import SwiftData
+import SwiftUI
+import UIKit
 
 struct ChecklistRowView: View {
     @Bindable var item: ChecklistItem
@@ -24,17 +24,17 @@ struct ChecklistRowView: View {
     }
 
     private var baseIndent: CGFloat {
-        CGFloat(max(depth - 1, 0)) * 20
+        CGFloat(max(self.depth - 1, 0)) * 20
     }
 
     private var isFocused: Bool {
-        focusBinding?.wrappedValue == item.id
+        self.focusBinding?.wrappedValue == self.item.id
     }
 
     private var shouldShowDeleteButton: Bool {
-        let listIsInEditMode = editMode?.wrappedValue.isEditing ?? false
-        let canShow = !isImmutable && !isInCompletedSection
-        return (isFocused || listIsInEditMode) && canShow
+        let listIsInEditMode = self.editMode?.wrappedValue.isEditing ?? false
+        let canShow = !self.isImmutable && !self.isInCompletedSection
+        return (self.isFocused || listIsInEditMode) && canShow
     }
 
     @ViewBuilder
@@ -42,27 +42,27 @@ struct ChecklistRowView: View {
         let base = BackspaceAwareTextField(
             text: $item.title,
             isFirstResponder: Binding(
-                get: { focusBinding?.wrappedValue == item.id },
+                get: { focusBinding?.wrappedValue == self.item.id },
                 set: { newValue in
-                    if newValue && focusBinding?.wrappedValue != item.id {
-                        focusBinding?.wrappedValue = item.id
+                    if newValue && focusBinding?.wrappedValue != self.item.id {
+                        focusBinding?.wrappedValue = self.item.id
                     }
                 }
             ),
-            isEditable: !(isImmutable || isInCompletedSection),
-            isStrikethrough: item.isCompleted && isInCompletedSection,
-            opacity: isInCompletedSection ? 0.6 : 1.0,
+            isEditable: !(self.isImmutable || self.isInCompletedSection),
+            isStrikethrough: self.item.isCompleted && self.isInCompletedSection,
+            opacity: self.isInCompletedSection ? 0.6 : 1.0,
             onSubmitNewline: {
-                item.title = item.title.replacingOccurrences(of: "\n", with: "")
-                onSubmit()
+                self.item.title = self.item.title.replacingOccurrences(of: "\n", with: "")
+                self.onSubmit()
             },
             onDeleteWhenEmpty: {
-                guard item.title.isEmpty else { return }
-                deleteSelf()
+                guard self.item.title.isEmpty else { return }
+                self.deleteSelf()
             }
         )
         if let focusBinding {
-            base.focused(focusBinding, equals: item.id)
+            base.focused(focusBinding, equals: self.item.id)
         } else {
             base
         }
@@ -71,7 +71,7 @@ struct ChecklistRowView: View {
     var body: some View {
         HStack(spacing: 12) {
             // Drag handle icon - only show if not in completed section
-            if isInCompletedSection {
+            if self.isInCompletedSection {
                 // Preserve spacing where drag handle would be
                 Color.clear
                     .frame(width: 20, height: 16)
@@ -85,38 +85,38 @@ struct ChecklistRowView: View {
                     .highPriorityGesture(
                         DragGesture(minimumDistance: 20)
                             .onChanged { value in
-                                handleHorizontalDragChanged(translation: value.translation)
+                                self.handleHorizontalDragChanged(translation: value.translation)
                             }
                             .onEnded { value in
-                                handleHorizontalDrag(translation: value.translation)
-                                dragOffset = 0
+                                self.handleHorizontalDrag(translation: value.translation)
+                                self.dragOffset = 0
                             }
                     )
             }
 
             // Checkbox (only for non-template trips)
-            if showCheckbox {
+            if self.showCheckbox {
                 Button(action: {
-                    if !isImmutable {
-                        onCheckToggle()
+                    if !self.isImmutable {
+                        self.onCheckToggle()
                     }
                 }) {
-                    Image(systemName: item.isCompleted ? "checkmark.square.fill" : "square")
-                        .foregroundColor(isImmutable ? .secondary.opacity(0.5) : .primary)
+                    Image(systemName: self.item.isCompleted ? "checkmark.square.fill" : "square")
+                        .foregroundColor(self.isImmutable ? .secondary.opacity(0.5) : .primary)
                         .font(.system(size: 20))
                 }
                 .buttonStyle(.plain)
-                .disabled(isImmutable)
+                .disabled(self.isImmutable)
             }
 
             // Main content area
             HStack(spacing: 8) {
-                titleField
+                self.titleField
 
                 Spacer()
 
-                if shouldShowDeleteButton {
-                    Button(action: deleteSelf) {
+                if self.shouldShowDeleteButton {
+                    Button(action: self.deleteSelf) {
                         Image(systemName: "xmark")
                             .foregroundColor(.secondary)
                             .font(.system(size: 14))
@@ -127,26 +127,26 @@ struct ChecklistRowView: View {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                if !isImmutable && !isInCompletedSection {
-                    focusBinding?.wrappedValue = item.id
+                if !self.isImmutable, !self.isInCompletedSection {
+                    self.focusBinding?.wrappedValue = self.item.id
                 }
             }
         }
-        .padding(.leading, baseIndent)
-        .offset(x: dragOffset)
-        .animation(.interactiveSpring(response: 0.2, dampingFraction: 0.85), value: dragOffset)
+        .padding(.leading, self.baseIndent)
+        .offset(x: self.dragOffset)
+        .animation(.interactiveSpring(response: 0.2, dampingFraction: 0.85), value: self.dragOffset)
         .contentShape(Rectangle())
         .onDrag {
-            focusBinding?.wrappedValue = nil
-            if !isInCompletedSection {
-                onDragStart()
-                return NSItemProvider(object: NSString(string: item.id.uuidString))
+            self.focusBinding?.wrappedValue = nil
+            if !self.isInCompletedSection {
+                self.onDragStart()
+                return NSItemProvider(object: NSString(string: self.item.id.uuidString))
             }
             return NSItemProvider()
         }
         .onDrop(of: [.text], isTargeted: nil) { _, _ in
-            if !isInCompletedSection {
-                onDragEnd()
+            if !self.isInCompletedSection {
+                self.onDragEnd()
             }
             return false
         }
@@ -158,8 +158,8 @@ struct ChecklistRowView: View {
             focusBinding.wrappedValue = previousID
         }
 
-        modelContext.delete(item)
-        try? modelContext.save()
+        self.modelContext.delete(self.item)
+        try? self.modelContext.save()
     }
 
     /// Finds the previous visible row in preorder traversal, matching the list display order.
@@ -169,7 +169,7 @@ struct ChecklistRowView: View {
         let siblings = parent.children.sorted(by: { $0.sortOrder < $1.sortOrder })
         if let index = siblings.firstIndex(where: { $0.id == item.id }), index > 0 {
             let previousSibling = siblings[index - 1]
-            return deepestDescendantID(of: previousSibling)
+            return self.deepestDescendantID(of: previousSibling)
         }
 
         // No previous sibling: fall back to parent, unless the parent is the hidden root.
@@ -200,7 +200,7 @@ struct ChecklistRowView: View {
     }
 
     private func indentItem() {
-        guard canIndent(),
+        guard self.canIndent(),
               let parent = item.parent else { return }
 
         let siblings = parent.children.sorted(by: { $0.sortOrder < $1.sortOrder })
@@ -208,41 +208,41 @@ struct ChecklistRowView: View {
               currentIndex > 0 else { return }
 
         let previousSibling = siblings[currentIndex - 1]
-        let oldParent = item.parent
+        let oldParent = self.item.parent
 
-        item.parent = previousSibling
-        let nextOrder = (previousSibling.children.map { $0.sortOrder }.max() ?? -1) + 1
-        item.sortOrder = nextOrder
+        self.item.parent = previousSibling
+        let nextOrder = (previousSibling.children.map(\.sortOrder).max() ?? -1) + 1
+        self.item.sortOrder = nextOrder
 
-        rebalanceSortOrders(for: oldParent)
-        rebalanceSortOrders(for: previousSibling)
-        try? modelContext.save()
+        self.rebalanceSortOrders(for: oldParent)
+        self.rebalanceSortOrders(for: previousSibling)
+        try? self.modelContext.save()
     }
 
     private func outdentItem() {
         guard let currentParent = item.parent else { return }
 
         let newParent = currentParent.parent
-        item.parent = newParent
+        self.item.parent = newParent
 
-        rebalanceAfterOutdent(newParent: newParent, after: currentParent)
-        rebalanceSortOrders(for: currentParent)
-        rebalanceSortOrders(for: newParent)
-        try? modelContext.save()
+        self.rebalanceAfterOutdent(newParent: newParent, after: currentParent)
+        self.rebalanceSortOrders(for: currentParent)
+        self.rebalanceSortOrders(for: newParent)
+        try? self.modelContext.save()
     }
 
     private func handleHorizontalDragChanged(translation: CGSize) {
         let horizontal = translation.width
         let vertical = abs(translation.height)
-        guard abs(horizontal) > vertical + 4 else { dragOffset = 0; return }
+        guard abs(horizontal) > vertical + 4 else { self.dragOffset = 0; return }
 
         let limited = max(min(horizontal, 24), -24)
-        if limited > 0, canIndent() {
-            dragOffset = limited
-        } else if limited < 0, canOutdent() {
-            dragOffset = limited
+        if limited > 0, self.canIndent() {
+            self.dragOffset = limited
+        } else if limited < 0, self.canOutdent() {
+            self.dragOffset = limited
         } else {
-            dragOffset = 0
+            self.dragOffset = 0
         }
     }
 
@@ -252,19 +252,19 @@ struct ChecklistRowView: View {
         guard abs(horizontal) > vertical else { return }
 
         if horizontal > Constants.dragThreshold {
-            indentItem()
-        } else if horizontal < -Constants.dragThreshold, canOutdent() {
-            outdentItem()
+            self.indentItem()
+        } else if horizontal < -Constants.dragThreshold, self.canOutdent() {
+            self.outdentItem()
         }
-        dragOffset = 0
+        self.dragOffset = 0
     }
 
     private func canOutdent() -> Bool {
-        return item.parent != nil
+        self.item.parent != nil
     }
 
     private func rebalanceSortOrders(for parent: ChecklistItem?) {
-        guard let parent = parent else { return }
+        guard let parent else { return }
         let sortedChildren = parent.children.sorted(by: { $0.sortOrder < $1.sortOrder })
         for (index, child) in sortedChildren.enumerated() {
             child.sortOrder = index
@@ -272,16 +272,16 @@ struct ChecklistRowView: View {
     }
 
     private func rebalanceAfterOutdent(newParent: ChecklistItem?, after parent: ChecklistItem) {
-        guard let newParent = newParent else { return }
+        guard let newParent else { return }
 
         var reordered = newParent.children
-            .filter { $0.id != item.id }
+            .filter { $0.id != self.item.id }
             .sorted(by: { $0.sortOrder < $1.sortOrder })
 
         if let parentIndex = reordered.firstIndex(where: { $0.id == parent.id }) {
-            reordered.insert(item, at: parentIndex + 1)
+            reordered.insert(self.item, at: parentIndex + 1)
         } else {
-            reordered.append(item)
+            reordered.append(self.item)
         }
 
         for (idx, child) in reordered.enumerated() {
@@ -312,20 +312,20 @@ private struct BackspaceAwareTextField: UIViewRepresentable {
         return tf
     }
 
-    func updateUIView(_ uiView: BackspaceAwareUITextField, context: Context) {
-        uiView.isUserInteractionEnabled = isEditable
-        uiView.alpha = opacity
-        uiView.onDeleteWhenEmpty = onDeleteWhenEmpty
-        uiView.onSubmitNewline = onSubmitNewline
+    func updateUIView(_ uiView: BackspaceAwareUITextField, context _: Context) {
+        uiView.isUserInteractionEnabled = self.isEditable
+        uiView.alpha = self.opacity
+        uiView.onDeleteWhenEmpty = self.onDeleteWhenEmpty
+        uiView.onSubmitNewline = self.onSubmitNewline
 
         // Only update text if it's different to avoid cursor jumping
-        if uiView.text != text {
-            uiView.text = text
+        if uiView.text != self.text {
+            uiView.text = self.text
         }
 
         // Apply strikethrough styling via typing attributes to avoid resetting text/selection.
         var attrs = uiView.defaultTextAttributes
-        attrs[.strikethroughStyle] = isStrikethrough ? NSUnderlineStyle.single.rawValue : 0
+        attrs[.strikethroughStyle] = self.isStrikethrough ? NSUnderlineStyle.single.rawValue : 0
         uiView.defaultTextAttributes = attrs
         uiView.typingAttributes = attrs
     }
@@ -342,28 +342,28 @@ private struct BackspaceAwareTextField: UIViewRepresentable {
         }
 
         @objc func editingChanged(_ textField: UITextField) {
-            parent.text = textField.text ?? ""
+            self.parent.text = textField.text ?? ""
         }
 
-        func textFieldDidBeginEditing(_ textField: UITextField) {
-            parent.isFirstResponder = true
+        func textFieldDidBeginEditing(_: UITextField) {
+            self.parent.isFirstResponder = true
         }
 
-        func textFieldDidEndEditing(_ textField: UITextField) {
-            parent.isFirstResponder = false
+        func textFieldDidEndEditing(_: UITextField) {
+            self.parent.isFirstResponder = false
         }
 
         // Keep delegate permissive; newline handled in insertText override.
-        func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        func textField(_: UITextField, shouldChangeCharactersIn _: NSRange, replacementString string: String) -> Bool {
             if string == "\n" {
-                parent.onSubmitNewline()
+                self.parent.onSubmitNewline()
                 return false
             }
             return true
         }
 
-        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            parent.onSubmitNewline()
+        func textFieldShouldReturn(_: UITextField) -> Bool {
+            self.parent.onSubmitNewline()
             return false
         }
     }
@@ -375,14 +375,14 @@ private final class BackspaceAwareUITextField: UITextField {
 
     override func deleteBackward() {
         if (text ?? "").isEmpty {
-            onDeleteWhenEmpty?()
+            self.onDeleteWhenEmpty?()
         }
         super.deleteBackward()
     }
 
     override func insertText(_ text: String) {
         if text == "\n" {
-            onSubmitNewline?()
+            self.onSubmitNewline?()
         } else {
             super.insertText(text)
         }

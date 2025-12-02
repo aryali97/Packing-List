@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ListView: View {
     var isTemplate: Bool
@@ -22,21 +22,21 @@ struct ListView: View {
 
     let columns = [
         GridItem(.flexible()),
-        GridItem(.flexible())
+        GridItem(.flexible()),
     ]
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(packingLists) { list in
+                LazyVGrid(columns: self.columns, spacing: 16) {
+                    ForEach(self.packingLists) { list in
                         NavigationLink(destination: DetailView(packingList: list)) {
                             PackingListCard(packingList: list)
                         }
                         .buttonStyle(.plain) // Removes default button styling
                         .contextMenu {
                             Button(role: .destructive) {
-                                modelContext.delete(list)
+                                self.modelContext.delete(list)
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
@@ -45,45 +45,44 @@ struct ListView: View {
                 }
                 .padding()
             }
-            .navigationTitle(isTemplate ? "Templates" : "Trips")
+            .navigationTitle(self.isTemplate ? "Templates" : "Trips")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: addItem) {
+                    Button(action: self.addItem) {
                         Label("Add Item", systemImage: "plus")
                     }
                 }
             }
-            .sheet(isPresented: $showCreateTripSheet) {
+            .sheet(isPresented: self.$showCreateTripSheet) {
                 CreateTripView { newTrip in
-                    navigateToDetail(for: newTrip, shouldStartEditing: true)
+                    self.navigateToDetail(for: newTrip, shouldStartEditing: true)
                 }
             }
-            .navigationDestination(isPresented: $navigateToDetail) {
+            .navigationDestination(isPresented: self.$navigateToDetail) {
                 if let selectedListForNavigation {
-                    DetailView(packingList: selectedListForNavigation, startEditingName: startEditingName)
+                    DetailView(packingList: selectedListForNavigation, startEditingName: self.startEditingName)
                 }
             }
         }
     }
 
     private func addItem() {
-        if isTemplate {
+        if self.isTemplate {
             withAnimation {
                 let newItem = PackingList(name: "", isTemplate: true)
-                modelContext.insert(newItem)
-                navigateToDetail(for: newItem, shouldStartEditing: true)
+                self.modelContext.insert(newItem)
+                self.navigateToDetail(for: newItem, shouldStartEditing: true)
             }
         } else {
-            showCreateTripSheet = true
+            self.showCreateTripSheet = true
         }
     }
 
     private func navigateToDetail(for list: PackingList, shouldStartEditing: Bool) {
-        selectedListForNavigation = list
-        startEditingName = shouldStartEditing
-        navigateToDetail = true
+        self.selectedListForNavigation = list
+        self.startEditingName = shouldStartEditing
+        self.navigateToDetail = true
     }
-
 }
 
 #Preview {

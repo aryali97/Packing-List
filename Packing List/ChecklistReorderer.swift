@@ -1,6 +1,6 @@
 import Foundation
 
-struct ChecklistReorderer {
+enum ChecklistReorderer {
     struct FlatItem: Identifiable {
         let id: UUID
         let item: ChecklistItem
@@ -8,7 +8,7 @@ struct ChecklistReorderer {
     }
 
     static func flatten(root: ChecklistItem) -> [FlatItem] {
-        flatten(parent: root, depth: 1)
+        self.flatten(parent: root, depth: 1)
     }
 
     static func visibleIndices(flat: [FlatItem], collapsingID: UUID?) -> [Int] {
@@ -35,23 +35,22 @@ struct ChecklistReorderer {
         destinationVisible: Int,
         collapsingID: UUID?
     ) -> [FlatItem] {
-        let visibleBefore = visibleIndices(flat: flat, collapsingID: collapsingID)
+        let visibleBefore = self.visibleIndices(flat: flat, collapsingID: collapsingID)
         guard sourceVisible < visibleBefore.count else { return flat }
 
         let sourceFlatIndex = visibleBefore[sourceVisible]
-        let moveRange = subtreeRange(in: flat, at: sourceFlatIndex)
+        let moveRange = self.subtreeRange(in: flat, at: sourceFlatIndex)
         let block = Array(flat[moveRange])
 
         var flatWithoutBlock = flat
         flatWithoutBlock.removeSubrange(moveRange)
 
-        let visibleAfter = visibleIndices(flat: flatWithoutBlock, collapsingID: nil)
+        let visibleAfter = self.visibleIndices(flat: flatWithoutBlock, collapsingID: nil)
 
-        let adjustedDestinationVisible: Int
-        if block.count > 1 && destinationVisible > sourceVisible {
-            adjustedDestinationVisible = max(sourceVisible + 1, destinationVisible - (block.count - 1))
+        let adjustedDestinationVisible: Int = if block.count > 1, destinationVisible > sourceVisible {
+            max(sourceVisible + 1, destinationVisible - (block.count - 1))
         } else {
-            adjustedDestinationVisible = destinationVisible
+            destinationVisible
         }
 
         let clampedDestination = min(adjustedDestinationVisible, visibleAfter.count)
@@ -108,16 +107,16 @@ struct ChecklistReorderer {
     private static func flatten(parent: ChecklistItem, depth: Int) -> [FlatItem] {
         let sortedChildren = parent.children.sorted(by: { $0.sortOrder < $1.sortOrder })
         return sortedChildren.flatMap { child in
-            [FlatItem(id: child.id, item: child, depth: depth)] + flatten(parent: child, depth: depth + 1)
+            [FlatItem(id: child.id, item: child, depth: depth)] + self.flatten(parent: child, depth: depth + 1)
         }
     }
 
     private static func subtreeRange(in flat: [FlatItem], at index: Int) -> Range<Int> {
         let baseDepth = flat[index].depth
         var end = index + 1
-        while end < flat.count && flat[end].depth > baseDepth {
+        while end < flat.count, flat[end].depth > baseDepth {
             end += 1
         }
-        return index..<end
+        return index ..< end
     }
 }

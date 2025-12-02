@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct CreateTripView: View {
     @Environment(\.dismiss) private var dismiss
@@ -11,37 +11,37 @@ struct CreateTripView: View {
     var onCreate: ((PackingList) -> Void)?
 
     @State private var tripName: String = ""
-    @State private var tripDate: Date = Date()
+    @State private var tripDate: Date = .init()
     @State private var selectedTemplates: Set<PackingList> = []
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Trip Details") {
-                    TextField("Trip Name", text: $tripName)
-                    DatePicker("Date", selection: $tripDate, displayedComponents: .date)
+                    TextField("Trip Name", text: self.$tripName)
+                    DatePicker("Date", selection: self.$tripDate, displayedComponents: .date)
                 }
 
                 Section("Select Templates") {
-                    if templates.isEmpty {
+                    if self.templates.isEmpty {
                         Text("No templates available. Create one in the Templates tab.")
                             .foregroundStyle(.secondary)
                     } else {
-                        ForEach(templates) { template in
+                        ForEach(self.templates) { template in
                             HStack {
                                 Text(template.name)
                                 Spacer()
-                                if selectedTemplates.contains(template) {
+                                if self.selectedTemplates.contains(template) {
                                     Image(systemName: "checkmark")
                                         .foregroundStyle(.blue)
                                 }
                             }
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                if selectedTemplates.contains(template) {
-                                    selectedTemplates.remove(template)
+                                if self.selectedTemplates.contains(template) {
+                                    self.selectedTemplates.remove(template)
                                 } else {
-                                    selectedTemplates.insert(template)
+                                    self.selectedTemplates.insert(template)
                                 }
                             }
                         }
@@ -52,15 +52,15 @@ struct CreateTripView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
-                        dismiss()
+                        self.dismiss()
                     }
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
-                        createTrip()
+                        self.createTrip()
                     }
-                    .disabled(tripName.isEmpty)
+                    .disabled(self.tripName.isEmpty)
                 }
             }
         }
@@ -70,7 +70,7 @@ struct CreateTripView: View {
         let newTrip = PackingList(name: tripName, isTemplate: false, tripDate: tripDate)
 
         // Deep copy items from selected templates
-        for template in selectedTemplates {
+        for template in self.selectedTemplates {
             let templateRoot = template.rootItem
             let templateChildren = templateRoot.children
             guard !templateChildren.isEmpty else { continue }
@@ -78,14 +78,14 @@ struct CreateTripView: View {
             let newTripRoot = newTrip.rootItem
 
             for item in templateChildren {
-                let copiedItem = deepCopy(item: item)
+                let copiedItem = self.deepCopy(item: item)
                 copiedItem.parent = newTripRoot
             }
         }
 
-        modelContext.insert(newTrip)
-        onCreate?(newTrip)
-        dismiss()
+        self.modelContext.insert(newTrip)
+        self.onCreate?(newTrip)
+        self.dismiss()
     }
 
     // Recursive deep copy function
@@ -93,7 +93,7 @@ struct CreateTripView: View {
         let newItem = ChecklistItem(title: item.title, isCompleted: false, sortOrder: item.sortOrder)
 
         for child in item.children {
-            let newChild = deepCopy(item: child)
+            let newChild = self.deepCopy(item: child)
             newChild.parent = newItem
         }
 

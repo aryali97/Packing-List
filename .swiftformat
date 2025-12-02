@@ -1,3 +1,6 @@
 --maxwidth 120
 
 --disable andOperator
+
+# Reference `self` explicitly
+--self insert

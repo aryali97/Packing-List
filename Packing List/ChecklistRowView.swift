@@ -1,5 +1,7 @@
 import SwiftUI
 import SwiftData
+import UIKit
+import ObjectiveC.runtime
 
 struct ChecklistRowView: View {
     @Bindable var item: ChecklistItem
@@ -37,18 +39,28 @@ struct ChecklistRowView: View {
     
     @ViewBuilder
     private var titleField: some View {
-        let base = TextField("Item", text: $item.title, axis: .vertical)
-            .disabled(isImmutable || isInCompletedSection)
-            .strikethrough(item.isCompleted && isInCompletedSection)
-            .opacity(isInCompletedSection ? 0.6 : 1.0)
-            .submitLabel(.return)
-            .onChange(of: item.title) { newValue in
-                guard isFocused else { return }
-                guard newValue.contains("\n") else { return }
-                item.title = newValue.replacingOccurrences(of: "\n", with: "")
+        let base = BackspaceAwareTextField(
+            text: $item.title,
+            isFirstResponder: Binding(
+                get: { focusBinding?.wrappedValue == item.id },
+                set: { newValue in
+                    if newValue && focusBinding?.wrappedValue != item.id {
+                        focusBinding?.wrappedValue = item.id
+                    }
+                }
+            ),
+            isEditable: !(isImmutable || isInCompletedSection),
+            isStrikethrough: item.isCompleted && isInCompletedSection,
+            opacity: isInCompletedSection ? 0.6 : 1.0,
+            onSubmitNewline: {
+                item.title = item.title.replacingOccurrences(of: "\n", with: "")
                 onSubmit()
+            },
+            onDeleteWhenEmpty: {
+                guard item.title.isEmpty else { return }
+                deleteSelf()
             }
-        
+        )
         if let focusBinding {
             base.focused(focusBinding, equals: item.id)
         } else {
@@ -274,6 +286,105 @@ struct ChecklistRowView: View {
         
         for (idx, child) in reordered.enumerated() {
             child.sortOrder = idx
+        }
+    }
+}
+
+// MARK: - Backspace-aware TextField
+
+private struct BackspaceAwareTextField: UIViewRepresentable {
+    @Binding var text: String
+    @Binding var isFirstResponder: Bool
+    var isEditable: Bool
+    var isStrikethrough: Bool
+    var opacity: Double
+    var onSubmitNewline: () -> Void
+    var onDeleteWhenEmpty: () -> Void
+    
+    func makeUIView(context: Context) -> BackspaceAwareUITextField {
+        let tf = BackspaceAwareUITextField()
+        tf.delegate = context.coordinator
+        tf.borderStyle = .none
+        tf.backgroundColor = .clear
+        tf.autocorrectionType = .yes
+        tf.returnKeyType = .default
+        tf.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
+        return tf
+    }
+    
+    func updateUIView(_ uiView: BackspaceAwareUITextField, context: Context) {
+        uiView.isUserInteractionEnabled = isEditable
+        uiView.alpha = opacity
+        uiView.onDeleteWhenEmpty = onDeleteWhenEmpty
+        uiView.onSubmitNewline = onSubmitNewline
+        
+        // Only update text if it's different to avoid cursor jumping
+        if uiView.text != text {
+            uiView.text = text
+        }
+        
+        // Apply strikethrough styling via typing attributes to avoid resetting text/selection.
+        var attrs = uiView.defaultTextAttributes
+        attrs[.strikethroughStyle] = isStrikethrough ? NSUnderlineStyle.single.rawValue : 0
+        uiView.defaultTextAttributes = attrs
+        uiView.typingAttributes = attrs
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+    
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        var parent: BackspaceAwareTextField
+        
+        init(parent: BackspaceAwareTextField) {
+            self.parent = parent
+        }
+        
+        @objc func editingChanged(_ textField: UITextField) {
+            parent.text = textField.text ?? ""
+        }
+        
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            parent.isFirstResponder = true
+        }
+        
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            parent.isFirstResponder = false
+        }
+        
+        // Keep delegate permissive; newline handled in insertText override.
+        func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+            if string == "\n" {
+                parent.onSubmitNewline()
+                return false
+            }
+            return true
+        }
+        
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            parent.onSubmitNewline()
+            return false
+        }
+    }
+}
+
+private final class BackspaceAwareUITextField: UITextField {
+    var onDeleteWhenEmpty: (() -> Void)?
+    var onSubmitNewline: (() -> Void)?
+    
+    override func deleteBackward() {
+        if (text ?? "").isEmpty {
+            onDeleteWhenEmpty?()
+        }
+        super.deleteBackward()
+    }
+    
+    override func insertText(_ text: String) {
+        if text == "\n" {
+            onSubmitNewline?()
+        } else {
+            super.insertText(text)
         }
     }
 }

@@ -107,4 +107,3 @@ final class ChecklistReordererTests: XCTestCase {
         let name: String
         let depth: Int
     }
-

@@ -56,11 +56,11 @@
 		85B860A82ECFFF6A003D93BC /* CreateTripView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CreateTripView.swift; sourceTree = "<group>"; };
 		85B860A92ECFFF6A003D93BC /* DetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
 		85B860AA2ECFFF6A003D93BC /* ChecklistItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChecklistItem.swift; sourceTree = "<group>"; };
-		85B860BC2ECFFF6A003D93BC /* ChecklistReorderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChecklistReorderer.swift; sourceTree = "<group>"; };
 		85B860AB2ECFFF6A003D93BC /* ListView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListView.swift; sourceTree = "<group>"; };
 		85B860AC2ECFFF6A003D93BC /* Packing_ListApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Packing_ListApp.swift; sourceTree = "<group>"; };
 		85B860AD2ECFFF6A003D93BC /* PackingList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PackingList.swift; sourceTree = "<group>"; };
 		85B860AE2ECFFF6A003D93BC /* PackingListCard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PackingListCard.swift; sourceTree = "<group>"; };
+		85B860BC2ECFFF6A003D93BC /* ChecklistReorderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChecklistReorderer.swift; sourceTree = "<group>"; };
 		85B860BD2ECFFF6A003D93BC /* ChecklistReordererTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChecklistReordererTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -161,6 +161,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 85B8609A2ECFF6E4003D93BC /* Build configuration list for PBXNativeTarget "Packing List" */;
 			buildPhases = (
+				8569E0F42EDE7D32001FC98D /* ShellScript */,
 				85B860722ECFF6E3003D93BC /* Sources */,
 				85B860732ECFF6E3003D93BC /* Frameworks */,
 				85B860742ECFF6E3003D93BC /* Resources */,
@@ -278,6 +279,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		8569E0F42EDE7D32001FC98D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif which swiftlint > /dev/null; then\n  swiftlint --fix && swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		85B860722ECFF6E3003D93BC /* Sources */ = {
@@ -460,6 +483,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Packing List/Preview Content\"";
 				DEVELOPMENT_TEAM = 389W483GVX;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -489,6 +513,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Packing List/Preview Content\"";
 				DEVELOPMENT_TEAM = 389W483GVX;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

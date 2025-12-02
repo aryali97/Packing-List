@@ -1,2 +1,6 @@
 disabled_rules:
   - identifier_name
+
+trailing_comma:
+  severity: warning
+  mandatory_comma: true

@@ -1,5 +1,7 @@
 disabled_rules:
   - identifier_name
+  - for_where
+  - multiple_closures_with_trailing_closure
 
 trailing_comma:
   severity: warning

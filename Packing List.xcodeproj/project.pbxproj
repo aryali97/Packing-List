@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		852B3B6A2EE90DB300C95BF7 /* AGENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = 852B3B692EE90DB200C95BF7 /* AGENTS.md */; };
+		852B3B6C2EE9183500C95BF7 /* BackspaceAwareTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 852B3B6B2EE9183500C95BF7 /* BackspaceAwareTextField.swift */; };
 		8568ACF72EDEB13A00561F36 /* packing_list.icon in Resources */ = {isa = PBXBuildFile; fileRef = 8568ACF62EDEB13A00561F36 /* packing_list.icon */; };
 		85B8608B2ECFF6E4003D93BC /* Packing_ListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B8608A2ECFF6E4003D93BC /* Packing_ListTests.swift */; };
 		85B860952ECFF6E4003D93BC /* Packing_ListUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860942ECFF6E4003D93BC /* Packing_ListUITests.swift */; };
@@ -44,6 +46,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		852B3B692EE90DB200C95BF7 /* AGENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AGENTS.md; sourceTree = "<group>"; };
+		852B3B6B2EE9183500C95BF7 /* BackspaceAwareTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackspaceAwareTextField.swift; sourceTree = "<group>"; };
 		8568ACF62EDEB13A00561F36 /* packing_list.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = packing_list.icon; sourceTree = "<group>"; };
 		85B860762ECFF6E3003D93BC /* Packing List.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Packing List.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		85B860862ECFF6E4003D93BC /* Packing ListTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Packing ListTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -144,6 +148,7 @@
 				85B860A52ECFFF6A003D93BC /* Assets.xcassets */,
 				8568ACF62EDEB13A00561F36 /* packing_list.icon */,
 				85B860A62ECFFF6A003D93BC /* ChecklistRowView.swift */,
+				852B3B6B2EE9183500C95BF7 /* BackspaceAwareTextField.swift */,
 				85B860A72ECFFF6A003D93BC /* ContentView.swift */,
 				85B860A82ECFFF6A003D93BC /* CreateTripView.swift */,
 				85B860A92ECFFF6A003D93BC /* DetailView.swift */,
@@ -153,6 +158,7 @@
 				85B860AC2ECFFF6A003D93BC /* Packing_ListApp.swift */,
 				85B860AD2ECFFF6A003D93BC /* PackingList.swift */,
 				85B860AE2ECFFF6A003D93BC /* PackingListCard.swift */,
+				852B3B692EE90DB200C95BF7 /* AGENTS.md */,
 			);
 			path = "Packing List";
 			sourceTree = "<group>";
@@ -264,6 +270,7 @@
 			files = (
 				85B860B02ECFFF6A003D93BC /* Preview Assets.xcassets in Resources */,
 				85B860B12ECFFF6A003D93BC /* Assets.xcassets in Resources */,
+				852B3B6A2EE90DB300C95BF7 /* AGENTS.md in Resources */,
 				8568ACF72EDEB13A00561F36 /* packing_list.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -311,6 +318,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				852B3B6C2EE9183500C95BF7 /* BackspaceAwareTextField.swift in Sources */,
 				85B860BB2ECFFF6A003D93BC /* ChecklistReorderer.swift in Sources */,
 				85B860B72ECFFF6A003D93BC /* ListView.swift in Sources */,
 				85B860B92ECFFF6A003D93BC /* PackingList.swift in Sources */,

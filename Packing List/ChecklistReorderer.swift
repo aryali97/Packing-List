@@ -35,6 +35,7 @@ enum ChecklistReorderer {
         destinationVisible: Int,
         collapsingID: UUID?
     ) -> [FlatItem] {
+        // Map source from visible index (possibly with a collapsed subtree) to flat index.
         let visibleBefore = self.visibleIndices(flat: flat, collapsingID: collapsingID)
         guard sourceVisible < visibleBefore.count else { return flat }
 
@@ -42,22 +43,40 @@ enum ChecklistReorderer {
         let moveRange = self.subtreeRange(in: flat, at: sourceFlatIndex)
         let block = Array(flat[moveRange])
 
+        // Remove the whole subtree block from the flat list.
         var flatWithoutBlock = flat
         flatWithoutBlock.removeSubrange(moveRange)
 
+        // After removal, compute visible indices with no collapsing.
         let visibleAfter = self.visibleIndices(flat: flatWithoutBlock, collapsingID: nil)
 
-        let adjustedDestinationVisible: Int = if block.count > 1, destinationVisible > sourceVisible {
-            max(sourceVisible + 1, destinationVisible - (block.count - 1))
+        // How many visible rows were removed from the list that "destinationVisible" is based on?
+        // If dragging with collapse (collapsingID == block.first.id), the visible list loses exactly 1 row.
+        // Otherwise (no collapse), the visible list loses all rows in the block.
+        let removedVisibleCount: Int = {
+            if let collapsingID, let first = block.first, collapsingID == first.id {
+                return 1
+            } else {
+                return block.count
+            }
+        }()
+
+        // Adjust destination to account for the removed visible rows when moving downward.
+        let adjustedDestinationVisible: Int
+        if destinationVisible > sourceVisible {
+            adjustedDestinationVisible = max(sourceVisible + 1, destinationVisible - removedVisibleCount)
         } else {
-            destinationVisible
+            adjustedDestinationVisible = destinationVisible
         }
 
+        // Clamp and map back to a flat index to insert the block.
         let clampedDestination = min(adjustedDestinationVisible, visibleAfter.count)
         let destinationFlatIndex = clampedDestination < visibleAfter.count
             ? visibleAfter[clampedDestination]
             : flatWithoutBlock.count
 
+        // Depth adjustment: keep the block's base depth within [1, previousDepth + 1]
+        // so you can indent under the previous item but not above the top level.
         let previousDepth = destinationFlatIndex > 0 ? flatWithoutBlock[destinationFlatIndex - 1].depth : 0
         let originalBaseDepth = block.first?.depth ?? 1
         let newBaseDepth = max(1, min(originalBaseDepth, previousDepth + 1))

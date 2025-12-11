@@ -1,5 +1,87 @@
 import SwiftData
 import SwiftUI
+import UIKit
+
+// MARK: - Drag Session Observer
+
+/// Observes drag sessions at the window level to detect when any drag ends.
+/// This is needed because SwiftUI's List handles drag/drop internally for onMove,
+/// bypassing standard onDrop handlers.
+struct DragSessionObserver: UIViewRepresentable {
+    let onDragEnd: () -> Void
+
+    func makeUIView(context: Context) -> UIView {
+        let view = SessionObserverView()
+        view.coordinator = context.coordinator
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        context.coordinator.onDragEnd = onDragEnd
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onDragEnd: onDragEnd)
+    }
+
+    class SessionObserverView: UIView {
+        weak var coordinator: Coordinator?
+        private var dropInteraction: UIDropInteraction?
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            setupInteraction()
+        }
+
+        private func setupInteraction() {
+            // Remove existing interaction if any
+            if let existing = dropInteraction {
+                window?.removeInteraction(existing)
+                dropInteraction = nil
+            }
+
+            // Add interaction to window to monitor all drag sessions
+            guard let window, let coordinator else { return }
+            let interaction = UIDropInteraction(delegate: coordinator)
+            window.addInteraction(interaction)
+            dropInteraction = interaction
+        }
+
+        override func willMove(toWindow newWindow: UIWindow?) {
+            // Clean up when leaving window
+            if let existing = dropInteraction, let oldWindow = window {
+                oldWindow.removeInteraction(existing)
+                dropInteraction = nil
+            }
+            super.willMove(toWindow: newWindow)
+        }
+    }
+
+    class Coordinator: NSObject, UIDropInteractionDelegate {
+        var onDragEnd: () -> Void
+
+        init(onDragEnd: @escaping () -> Void) {
+            self.onDragEnd = onDragEnd
+        }
+
+        func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
+            // Accept all sessions so we can observe them
+            true
+        }
+
+        func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
+            // Cancel from our perspective - let the List handle actual drops
+            UIDropProposal(operation: .cancel)
+        }
+
+        func dropInteraction(_ interaction: UIDropInteraction, sessionDidEnd session: UIDropSession) {
+            // Called when any drag session ends, regardless of outcome
+            onDragEnd()
+        }
+    }
+}
+
+// MARK: - Detail View
 
 struct DetailView: View {
     @Bindable var packingList: PackingList
@@ -100,7 +182,18 @@ struct DetailView: View {
     }
 
     var body: some View {
-        List {
+        ZStack {
+            // Invisible observer to detect when any drag session ends
+            DragSessionObserver {
+                if self.draggingItemID != nil {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        self.draggingItemID = nil
+                    }
+                }
+            }
+            .frame(width: 0, height: 0)
+
+            List {
             Section("Details") {
                 TextField("Name", text: self.$packingList.name)
                     .focused(self.$isNameFocused)
@@ -126,7 +219,6 @@ struct DetailView: View {
                             onDragStart: {
                                 withAnimation(.easeInOut(duration: 0.2)) { self.draggingItemID = flat.item.id }
                             },
-                            onDragEnd: { withAnimation(.easeInOut(duration: 0.2)) { self.draggingItemID = nil } },
                             onSubmit: { self.handleSubmit(for: flat.item) }
                         )
                         .transition(.opacity.combined(with: .move(edge: .top)))
@@ -146,9 +238,6 @@ struct DetailView: View {
                             focusBinding: self.$focusedItemID,
                             onDragStart: {
                                 withAnimation(.easeInOut(duration: 0.2)) { self.draggingItemID = flat.item.id }
-                            },
-                            onDragEnd: {
-                                withAnimation(.easeInOut(duration: 0.25).delay(0.05)) { self.draggingItemID = nil }
                             },
                             onCheckToggle: { self.toggleItemCompletion(item: flat.item) },
                             onSubmit: { self.handleSubmit(for: flat.item) }
@@ -182,10 +271,11 @@ struct DetailView: View {
                 }
             }
         }
-        .navigationTitle(self.packingList.name)
-        .navigationBarTitleDisplayMode(.inline)
-        .scrollDismissesKeyboard(.interactively)
-        .animation(.easeInOut(duration: 0.25), value: self.draggingItemID)
+            .navigationTitle(self.packingList.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .scrollDismissesKeyboard(.interactively)
+            .animation(.easeInOut(duration: 0.25), value: self.draggingItemID)
+        }
         .onAppear {
             if self.startEditingName {
                 // Delay to allow view to appear before focusing

@@ -11,13 +11,11 @@ struct ChecklistRowView: View {
     var isImmutable: Bool = false
     var focusBinding: FocusState<UUID?>.Binding?
     var onDragStart: () -> Void = {}
-    var onDragEnd: () -> Void = {}
     var onCheckToggle: () -> Void = {}
     var onSubmit: () -> Void = {}
     @Environment(\.modelContext) private var modelContext
     @Environment(\.editMode) private var editMode
     @State private var dragOffset: CGFloat = 0
-    @State private var hasNotifiedDragStart = false
 
     private enum Constants {
         static let dragThreshold: CGFloat = 25
@@ -140,17 +138,9 @@ struct ChecklistRowView: View {
             self.focusBinding?.wrappedValue = nil
             if !self.isInCompletedSection {
                 self.onDragStart()
-                return NSItemProvider(object: NSString(string: self.item.id.uuidString))
             }
-            return NSItemProvider()
+            return NSItemProvider(object: NSString(string: self.item.id.uuidString))
         }
-        .onDrop(
-            of: [.text],
-            delegate: RowDropDelegate(
-                isInCompletedSection: self.isInCompletedSection,
-                onDropEnd: self.onDragEnd
-            )
-        )
     }
 
     private func deleteSelf() {
@@ -287,36 +277,6 @@ struct ChecklistRowView: View {
 
         for (idx, child) in reordered.enumerated() {
             child.sortOrder = idx
-        }
-    }
-}
-
-private struct RowDropDelegate: DropDelegate {
-    let isInCompletedSection: Bool
-    let onDropEnd: () -> Void
-
-    func performDrop(info _: DropInfo) -> Bool {
-        self.notifyEndIfNeeded()
-        return true
-    }
-
-    func dropUpdated(info _: DropInfo) -> DropProposal? {
-        DropProposal(operation: .move)
-    }
-
-    @available(iOS 26.0, *)
-    func dropSessionDidEnd(_: DropSession) {
-        self.notifyEndIfNeeded()
-    }
-
-    func dropExited(info _: DropInfo) {
-        // If the drag leaves this row and ends elsewhere, ensure the collapse state is restored.
-        self.notifyEndIfNeeded()
-    }
-
-    private func notifyEndIfNeeded() {
-        if !self.isInCompletedSection {
-            self.onDropEnd()
         }
     }
 }

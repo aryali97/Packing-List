@@ -135,6 +135,7 @@ struct ChecklistRowView: View {
         .animation(.interactiveSpring(response: 0.2, dampingFraction: 0.85), value: self.dragOffset)
         .contentShape(Rectangle())
         .onDrag {
+            print("🟡 onDrag triggered for item: \(self.item.title)")
             self.focusBinding?.wrappedValue = nil
             if !self.isInCompletedSection {
                 self.onDragStart()
@@ -278,6 +279,27 @@ struct ChecklistRowView: View {
         for (idx, child) in reordered.enumerated() {
             child.sortOrder = idx
         }
+    }
+}
+
+// MARK: - Drag Preview View
+
+/// A simple preview view for drag operations that tracks when the drag ends via onDisappear.
+private struct DragPreviewView: View {
+    let title: String
+    let onDisappear: () -> Void
+
+    var body: some View {
+        Text(title.isEmpty ? "Item" : title)
+            .font(.body)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color(.systemBackground))
+            .cornerRadius(10)
+            .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+            .onDisappear {
+                onDisappear()
+            }
     }
 }
 

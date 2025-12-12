@@ -1,82 +1,48 @@
+import Combine
+import ObjectiveC
 import SwiftData
 import SwiftUI
-import UIKit
 
-// MARK: - Drag Session Observer
+// MARK: - Touch End Observer
 
-/// Observes drag sessions at the window level to detect when any drag ends.
-/// This is needed because SwiftUI's List handles drag/drop internally for onMove,
-/// bypassing standard onDrop handlers.
-struct DragSessionObserver: UIViewRepresentable {
-    let onDragEnd: () -> Void
+/// Observes when touches begin using method swizzling on UIWindow.
+/// Used to detect when user starts a new interaction after abandoning a drag.
+extension Notification.Name {
+    static let newTouchBegan = Notification.Name("newTouchBegan")
+}
 
-    func makeUIView(context: Context) -> UIView {
-        let view = SessionObserverView()
-        view.coordinator = context.coordinator
-        return view
+class TouchBeginObserver {
+    static let shared = TouchBeginObserver()
+    private var isInstalled = false
+
+    func install() {
+        guard !isInstalled else { return }
+        isInstalled = true
+
+        let originalSelector = #selector(UIWindow.sendEvent(_:))
+        let swizzledSelector = #selector(UIWindow.swizzled_sendEvent_begin(_:))
+
+        guard let originalMethod = class_getInstanceMethod(UIWindow.self, originalSelector),
+              let swizzledMethod = class_getInstanceMethod(UIWindow.self, swizzledSelector)
+        else {
+            return
+        }
+
+        method_exchangeImplementations(originalMethod, swizzledMethod)
     }
+}
 
-    func updateUIView(_ uiView: UIView, context: Context) {
-        context.coordinator.onDragEnd = onDragEnd
-    }
+extension UIWindow {
+    @objc func swizzled_sendEvent_begin(_ event: UIEvent) {
+        // Call original implementation
+        swizzled_sendEvent_begin(event)
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onDragEnd: onDragEnd)
-    }
+        guard event.type == .touches, let allTouches = event.allTouches else { return }
 
-    class SessionObserverView: UIView {
-        weak var coordinator: Coordinator?
-        private var dropInteraction: UIDropInteraction?
-
-        override func didMoveToWindow() {
-            super.didMoveToWindow()
-            setupInteraction()
-        }
-
-        private func setupInteraction() {
-            // Remove existing interaction if any
-            if let existing = dropInteraction {
-                window?.removeInteraction(existing)
-                dropInteraction = nil
-            }
-
-            // Add interaction to window to monitor all drag sessions
-            guard let window, let coordinator else { return }
-            let interaction = UIDropInteraction(delegate: coordinator)
-            window.addInteraction(interaction)
-            dropInteraction = interaction
-        }
-
-        override func willMove(toWindow newWindow: UIWindow?) {
-            // Clean up when leaving window
-            if let existing = dropInteraction, let oldWindow = window {
-                oldWindow.removeInteraction(existing)
-                dropInteraction = nil
-            }
-            super.willMove(toWindow: newWindow)
-        }
-    }
-
-    class Coordinator: NSObject, UIDropInteractionDelegate {
-        var onDragEnd: () -> Void
-
-        init(onDragEnd: @escaping () -> Void) {
-            self.onDragEnd = onDragEnd
-        }
-
-        func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
-            // Accept all sessions so we can observe them
-            true
-        }
-
-        func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
-            // Cancel from our perspective - let the List handle actual drops
-            UIDropProposal(operation: .cancel)
-        }
-
-        func dropInteraction(_ interaction: UIDropInteraction, sessionDidEnd session: UIDropSession) {
-            // Called when any drag session ends, regardless of outcome
-            onDragEnd()
+        // Check for new touch beginning
+        let hasBeganTouch = allTouches.contains { $0.phase == .began }
+        if hasBeganTouch {
+            NotificationCenter.default.post(name: .newTouchBegan, object: nil)
         }
     }
 }
@@ -89,6 +55,8 @@ struct DetailView: View {
 
     @Environment(\.modelContext) private var modelContext
     @State private var draggingItemID: UUID?
+    @State private var dragStartTime: Date?
+    @State private var dragCancellationTask: Task<Void, Never>?
     @FocusState private var isNameFocused: Bool
     @FocusState private var focusedItemID: UUID?
 
@@ -182,18 +150,7 @@ struct DetailView: View {
     }
 
     var body: some View {
-        ZStack {
-            // Invisible observer to detect when any drag session ends
-            DragSessionObserver {
-                if self.draggingItemID != nil {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        self.draggingItemID = nil
-                    }
-                }
-            }
-            .frame(width: 0, height: 0)
-
-            List {
+        List {
             Section("Details") {
                 TextField("Name", text: self.$packingList.name)
                     .focused(self.$isNameFocused)
@@ -216,9 +173,7 @@ struct DetailView: View {
                             depth: flat.depth,
                             showCheckbox: false,
                             focusBinding: self.$focusedItemID,
-                            onDragStart: {
-                                withAnimation(.easeInOut(duration: 0.2)) { self.draggingItemID = flat.item.id }
-                            },
+                            onDragStart: { self.handleDragStart(itemID: flat.item.id) },
                             onSubmit: { self.handleSubmit(for: flat.item) }
                         )
                         .transition(.opacity.combined(with: .move(edge: .top)))
@@ -236,9 +191,7 @@ struct DetailView: View {
                             isInCompletedSection: false,
                             isImmutable: false,
                             focusBinding: self.$focusedItemID,
-                            onDragStart: {
-                                withAnimation(.easeInOut(duration: 0.2)) { self.draggingItemID = flat.item.id }
-                            },
+                            onDragStart: { self.handleDragStart(itemID: flat.item.id) },
                             onCheckToggle: { self.toggleItemCompletion(item: flat.item) },
                             onSubmit: { self.handleSubmit(for: flat.item) }
                         )
@@ -271,15 +224,66 @@ struct DetailView: View {
                 }
             }
         }
-            .navigationTitle(self.packingList.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .scrollDismissesKeyboard(.interactively)
-            .animation(.easeInOut(duration: 0.25), value: self.draggingItemID)
-        }
+        .navigationTitle(self.packingList.name)
+        .navigationBarTitleDisplayMode(.inline)
+        .scrollDismissesKeyboard(.interactively)
+        .animation(.easeInOut(duration: 0.25), value: self.draggingItemID)
         .onAppear {
             if self.startEditingName {
                 // Delay to allow view to appear before focusing
                 DispatchQueue.main.async { self.isNameFocused = true }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .newTouchBegan)) { _ in
+            // When a new touch begins, if we have a pending drag state
+            // (draggingItemID is set but onMove hasn't fired), reset it.
+            // This handles the case where user abandons a drag by touching elsewhere.
+            guard self.draggingItemID != nil else { return }
+
+            // Ignore if this touch is too close to drag start (it's the drag touch itself)
+            if let startTime = self.dragStartTime,
+               Date().timeIntervalSince(startTime) < 0.5 {
+                return
+            }
+
+            // Cancel the timeout task and reset immediately
+            self.dragCancellationTask?.cancel()
+            self.dragCancellationTask = nil
+
+            withAnimation(.easeInOut(duration: 0.25)) {
+                self.draggingItemID = nil
+                self.dragStartTime = nil
+            }
+        }
+    }
+
+    private func handleDragStart(itemID: UUID) {
+        // Cancel any existing cancellation task
+        self.dragCancellationTask?.cancel()
+
+        // Record when drag started
+        self.dragStartTime = Date()
+
+        // Collapse children immediately
+        withAnimation(.easeInOut(duration: 0.2)) {
+            self.draggingItemID = itemID
+        }
+
+        // Start a timeout task that will reset draggingItemID if onMove doesn't fire.
+        // This handles the case where user holds for a long time without moving.
+        // Most drags are cancelled by the newTouchBegan observer, but this is a fallback.
+        let capturedID = itemID
+        self.dragCancellationTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 10_000_000_000) // 10 seconds
+
+            // If task was cancelled (by onMove) or draggingItemID changed, do nothing
+            guard !Task.isCancelled, self.draggingItemID == capturedID else { return }
+
+            // If we get here after 10 seconds and draggingItemID is still set,
+            // it means onMove never fired. Reset the drag state.
+            withAnimation(.easeInOut(duration: 0.25)) {
+                self.draggingItemID = nil
+                self.dragStartTime = nil
             }
         }
     }
@@ -369,6 +373,10 @@ struct DetailView: View {
     private func moveItems(from source: IndexSet, to destination: Int) {
         guard let sourceVisibleIndex = source.first else { return }
 
+        // Cancel the cancellation task since we completed a real move
+        self.dragCancellationTask?.cancel()
+        self.dragCancellationTask = nil
+
         let flat = self.flatItems
         let converted = flat.map { ChecklistReorderer.FlatItem(id: $0.id, item: $0.item, depth: $0.depth) }
 
@@ -381,6 +389,7 @@ struct DetailView: View {
 
         ChecklistReorderer.apply(flatOrder: moved, to: self.packingList.rootItem)
         self.draggingItemID = nil
+        self.dragStartTime = nil
     }
 
     private func dismissKeyboard() {

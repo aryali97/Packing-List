@@ -1,8 +1,26 @@
 @testable import Packing_List
+import SwiftData
 import XCTest
 
 @MainActor
 final class ChecklistReordererTests: XCTestCase {
+    private var modelContainer: ModelContainer!
+    private var modelContext: ModelContext!
+
+    override func setUp() {
+        super.setUp()
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        // swiftlint:disable:next force_try
+        self.modelContainer = try! ModelContainer(for: ChecklistItem.self, PackingList.self, configurations: config)
+        self.modelContext = self.modelContainer.mainContext
+    }
+
+    override func tearDown() {
+        self.modelContainer = nil
+        self.modelContext = nil
+        super.tearDown()
+    }
+
     func testMoveBlockForwardKeepsChildrenTogether() {
         let root = self.makeRoot([
             ("A", 1),
@@ -152,10 +170,14 @@ final class ChecklistReordererTests: XCTestCase {
 
     private func makeRoot(_ items: [(String, Int)]) -> ChecklistItem {
         let root = ChecklistItem(title: "root")
+        self.modelContext.insert(root)
+
         var stack: [(ChecklistItem, Int)] = [(root, 0)]
 
         for (title, depth) in items {
             let node = ChecklistItem(title: title)
+            self.modelContext.insert(node)
+
             while let last = stack.last, last.1 >= depth {
                 stack.removeLast()
             }

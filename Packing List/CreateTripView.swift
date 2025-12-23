@@ -69,34 +69,18 @@ struct CreateTripView: View {
     private func createTrip() {
         let newTrip = PackingList(name: tripName, isTemplate: false, tripDate: tripDate)
 
-        // Deep copy items from selected templates
-        for template in self.selectedTemplates {
-            let templateRoot = template.rootItem
-            let templateChildren = templateRoot.children
-            guard !templateChildren.isEmpty else { continue }
-
-            let newTripRoot = newTrip.rootItem
-
-            for item in templateChildren {
-                let copiedItem = self.deepCopy(item: item)
-                copiedItem.parent = newTripRoot
-            }
-        }
-
+        // Insert both the trip and its rootItem so relationships work correctly
         self.modelContext.insert(newTrip)
+        self.modelContext.insert(newTrip.rootItem)
+
+        // Convert selectedTemplates to an ordered array based on the order templates appear in the query
+        let orderedTemplates = self.templates.filter { self.selectedTemplates.contains($0) }
+        let templateRoots = orderedTemplates.map(\.rootItem)
+
+        // Merge items from selected templates with union logic for matching parents
+        TemplateMerger.merge(templateRoots: templateRoots, into: newTrip.rootItem, context: self.modelContext)
+
         self.onCreate?(newTrip)
         self.dismiss()
-    }
-
-    // Recursive deep copy function
-    private func deepCopy(item: ChecklistItem) -> ChecklistItem {
-        let newItem = ChecklistItem(title: item.title, isCompleted: false, sortOrder: item.sortOrder)
-
-        for child in item.children {
-            let newChild = self.deepCopy(item: child)
-            newChild.parent = newItem
-        }
-
-        return newItem
     }
 }

@@ -134,3 +134,17 @@ struct ReordererTests {
         #expect(true) // Replace with real assertions when helpers are available.
     }
 }
+```
+
+## Example format
+The user will sometimes provide examples of the full list with <item name, depth, (optional) confirmed>. Here's an example: A1, B1, C2, D3, E3, F1 represents the following:
+[ ] A
+[ ] B
+   [ ] C
+      [ ] D
+      [ ] E
+[ ] F
+
+Here's another example: A1, B2C represents:
+[ ] A
+   [x] B

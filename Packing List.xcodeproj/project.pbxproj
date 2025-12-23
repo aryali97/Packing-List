@@ -26,6 +26,8 @@
 		85B860BA2ECFFF6A003D93BC /* PackingListCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860AE2ECFFF6A003D93BC /* PackingListCard.swift */; };
 		85B860BB2ECFFF6A003D93BC /* ChecklistReorderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860BC2ECFFF6A003D93BC /* ChecklistReorderer.swift */; };
 		85B860BE2ECFFF6A003D93BC /* ChecklistReordererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B860BD2ECFFF6A003D93BC /* ChecklistReordererTests.swift */; };
+		85C000012EF393A000000001 /* TemplateMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85C000002EF393A000000001 /* TemplateMerger.swift */; };
+		85C000032EF393A000000002 /* TemplateMergerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85C000022EF393A000000002 /* TemplateMergerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +70,8 @@
 		85B860AE2ECFFF6A003D93BC /* PackingListCard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PackingListCard.swift; sourceTree = "<group>"; };
 		85B860BC2ECFFF6A003D93BC /* ChecklistReorderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChecklistReorderer.swift; sourceTree = "<group>"; };
 		85B860BD2ECFFF6A003D93BC /* ChecklistReordererTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChecklistReordererTests.swift; sourceTree = "<group>"; };
+		85C000002EF393A000000001 /* TemplateMerger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateMerger.swift; sourceTree = "<group>"; };
+		85C000022EF393A000000002 /* TemplateMergerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateMergerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +124,7 @@
 			children = (
 				85B8608A2ECFF6E4003D93BC /* Packing_ListTests.swift */,
 				85B860BD2ECFFF6A003D93BC /* ChecklistReordererTests.swift */,
+				85C000022EF393A000000002 /* TemplateMergerTests.swift */,
 			);
 			path = "Packing ListTests";
 			sourceTree = "<group>";
@@ -158,6 +163,7 @@
 				85B860AC2ECFFF6A003D93BC /* Packing_ListApp.swift */,
 				85B860AD2ECFFF6A003D93BC /* PackingList.swift */,
 				85B860AE2ECFFF6A003D93BC /* PackingListCard.swift */,
+				85C000002EF393A000000001 /* TemplateMerger.swift */,
 				852B3B692EE90DB200C95BF7 /* AGENTS.md */,
 			);
 			path = "Packing List";
@@ -329,6 +335,7 @@
 				85B860B82ECFFF6A003D93BC /* Packing_ListApp.swift in Sources */,
 				85B860B62ECFFF6A003D93BC /* ChecklistItem.swift in Sources */,
 				85B860B42ECFFF6A003D93BC /* CreateTripView.swift in Sources */,
+				85C000012EF393A000000001 /* TemplateMerger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -338,6 +345,7 @@
 			files = (
 				85B860BE2ECFFF6A003D93BC /* ChecklistReordererTests.swift in Sources */,
 				85B8608B2ECFF6E4003D93BC /* Packing_ListTests.swift in Sources */,
+				85C000032EF393A000000002 /* TemplateMergerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
